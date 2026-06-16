@@ -1,0 +1,13 @@
+{
+  "os": "Windows 10",
+  "cpu_model": "Intel64 Family 6 Model 142 Stepping 9, GenuineIntel",
+  "cpu_physical_cores": 2,
+  "cpu_logical_cores": 4,
+  "ram_total_gb": 7.884037017822266,
+  "ram_available_gb": 0.6737861633300781,
+  "gpu_name": null,
+  "vram_total_gb": null,
+  "disk_free_gb": 42.001670837402344,
+  "disk_type_hint": "confirm SSD/NVMe vs HDD in Task Manager > Performance",
+  "python_version": "3.12.13"
+}

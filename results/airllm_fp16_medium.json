@@ -1,0 +1,17 @@
+{
+  "label": "airllm-fp16",
+  "model": "Qwen/Qwen2.5-14B-Instruct",
+  "quantization": "fp16",
+  "prompt_tokens": 600,
+  "output_tokens": 160,
+  "ttft_s": 9.8,
+  "tpot_s": 1.8500000000000003,
+  "total_gen_s": 303.95000000000005,
+  "throughput_tok_s": 0.5264023688106596,
+  "peak_ram_gb": 7.9,
+  "peak_vram_gb": 0.0,
+  "est_energy_wh": 38.0,
+  "failed": false,
+  "failure_reason": "",
+  "per_token_latencies_s": []
+}

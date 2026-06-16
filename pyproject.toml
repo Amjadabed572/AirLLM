@@ -1,0 +1,43 @@
+[project]
+name = "ex05-airllm"
+version = "1.0.0"
+description = "EX05 - Running a Massive LLM Locally: AirLLM, Quantization and Performance Benchmarking"
+readme = "README.md"
+requires-python = ">=3.10,<3.13"
+dependencies = [
+    "torch>=2.2",
+    "transformers>=4.44",
+    "accelerate>=0.33",
+    "airllm>=2.11",
+    "bitsandbytes>=0.43; platform_system != 'Darwin'",
+    "huggingface-hub>=0.24",
+    "psutil>=5.9",
+    "matplotlib>=3.8",
+    "numpy>=1.26",
+]
+
+# NOTE on Python version: AirLLM and bitsandbytes lag the newest CPython release.
+# Pin to 3.10-3.12. Do NOT use 3.13 yet (see README "Known pitfalls").
+
+[project.optional-dependencies]
+# Optional: only needed if you use Ollama for the baseline instead of transformers.
+ollama = ["ollama>=0.3"]
+
+[tool.uv]
+# uv is the only package manager used in this project:
+#   uv venv && uv pip install -e .
+package = true
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W", "UP", "B"]
