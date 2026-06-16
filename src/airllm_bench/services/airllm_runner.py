@@ -32,7 +32,13 @@ def run_airllm(
     from airllm import AutoModel  # general class -> avoids class-mismatch error
 
     try:
-        kwargs: dict = {"layer_shards_saving_path": layer_shards_saving_path}
+        # AirLLM defaults its device to "cuda:0"; on a CPU-only torch build that
+        # raises "Torch not compiled with CUDA enabled". Pin to the device we have.
+        device = "cuda:0" if torch.cuda.is_available() else "cpu"
+        kwargs: dict = {
+            "layer_shards_saving_path": layer_shards_saving_path,
+            "device": device,
+        }
         compression = QUANT_TO_COMPRESSION[quant]
         if compression is not None:
             kwargs["compression"] = compression  # needs bitsandbytes + CUDA GPU
