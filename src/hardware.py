@@ -62,24 +62,86 @@ def _cpu_model() -> str:
 
 
 def _gpu_info() -> tuple[str | None, float | None]:
-    """Returns (gpu_name, vram_gb). Lazy torch import so this module
-    stays importable on machines without torch installed yet."""
+    """Returns (gpu_name, vram_gb). Prefers torch (gives exact usable VRAM),
+    then falls back to nvidia-smi, then to Windows WMI so the GPU is captured
+    even before torch is installed."""
+    # 1) torch (most accurate — reports the CUDA device the runs will use)
     try:
         import torch
+
+        if torch.cuda.is_available():
+            idx = torch.cuda.current_device()
+            props = torch.cuda.get_device_properties(idx)
+            return props.name, props.total_memory / (1024**3)
     except ImportError:
-        return None, None
-    if not torch.cuda.is_available():
-        return None, None
-    idx = torch.cuda.current_device()
-    props = torch.cuda.get_device_properties(idx)
-    return props.name, props.total_memory / (1024**3)
+        pass
+
+    # 2) nvidia-smi (present when an NVIDIA driver is installed, no torch needed)
+    try:
+        import subprocess
+
+        out = subprocess.run(
+            ["nvidia-smi", "--query-gpu=name,memory.total",
+             "--format=csv,noheader,nounits"],
+            capture_output=True, text=True, timeout=10,
+        )
+        if out.returncode == 0 and out.stdout.strip():
+            name, mem_mib = out.stdout.strip().splitlines()[0].split(",")
+            return name.strip(), float(mem_mib) / 1024.0
+    except (OSError, ValueError, subprocess.SubprocessError):
+        pass
+
+    # 3) Windows WMI fallback (captures the adapter even without NVIDIA tooling)
+    if platform.system() == "Windows":
+        try:
+            import subprocess
+
+            out = subprocess.run(
+                ["wmic", "path", "win32_VideoController",
+                 "get", "name,AdapterRAM", "/format:csv"],
+                capture_output=True, text=True, timeout=10,
+            )
+            best_name, best_vram = None, None
+            for line in out.stdout.splitlines():
+                parts = [p.strip() for p in line.split(",")]
+                if len(parts) < 3 or not parts[2] or parts[1] == "AdapterRAM":
+                    continue
+                name = parts[2]
+                try:
+                    vram = int(parts[1]) / (1024**3)
+                except ValueError:
+                    vram = None
+                # Prefer a discrete NVIDIA/AMD adapter over integrated graphics.
+                if best_name is None or "nvidia" in name.lower() or "amd" in name.lower():
+                    best_name, best_vram = name, vram
+            if best_name:
+                # WMI AdapterRAM is a 32-bit field: it caps/garbles VRAM > 4 GB,
+                # so treat it as a hint only.
+                return best_name, best_vram
+        except (OSError, subprocess.SubprocessError):
+            pass
+
+    return None, None
 
 
 def _disk_type_hint(path: str = ".") -> str:
-    """Best-effort SSD/HDD hint. Exact detection is OS-specific; we flag
-    that the user should confirm. Most modern laptops are NVMe/SSD."""
+    """Best-effort SSD/HDD detection. Disk class matters here: AirLLM is
+    disk-I/O-bound, so SSD vs HDD directly sets the decode ceiling."""
     system = platform.system()
     if system == "Windows":
+        try:
+            import subprocess
+
+            out = subprocess.run(
+                ["powershell", "-NoProfile", "-Command",
+                 "(Get-PhysicalDisk | Select-Object -First 1 -ExpandProperty MediaType)"],
+                capture_output=True, text=True, timeout=15,
+            )
+            media = out.stdout.strip()
+            if media:
+                return f"{media} (Get-PhysicalDisk)"
+        except (OSError, subprocess.SubprocessError):
+            pass
         return "confirm SSD/NVMe vs HDD in Task Manager > Performance"
     return "confirm with `lsblk -d -o name,rota` (rota=0 means SSD)"
 

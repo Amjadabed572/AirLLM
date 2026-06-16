@@ -27,8 +27,10 @@ class ModelChoice:
 _CANDIDATES = [
     ModelChoice("Qwen/Qwen2.5-72B-Instruct", 72, "Flagship; needs ~145GB disk for FP16 shards"),
     ModelChoice("Qwen/Qwen2.5-32B-Instruct", 32, "Heavy but tractable on a good laptop+NVMe"),
-    ModelChoice("Qwen/Qwen2.5-14B-Instruct", 14, "Sweet spot: clearly stresses 16GB RAM machines"),
-    ModelChoice("Qwen/Qwen2.5-7B-Instruct", 7, "Light; use only for the smoke test"),
+    ModelChoice("Qwen/Qwen2.5-14B-Instruct", 14, "Sweet spot for 16GB+ RAM machines with ample disk"),
+    ModelChoice("Qwen/Qwen2.5-7B-Instruct", 7,
+                "Right 'hurts but works' pick for an 8GB-RAM laptop: FP16 (~15GB) "
+                "far exceeds RAM so the naive baseline fails, yet shards fit a ~40GB disk"),
 ]
 
 
