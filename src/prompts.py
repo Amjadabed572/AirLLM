@@ -19,8 +19,12 @@ class Prompt:
 PROMPTS: list[Prompt] = [
     Prompt(
         name="short",
+        # max_new_tokens kept low: AirLLM streams ~15 GB from disk PER TOKEN on
+        # this machine, so 20 tokens already gives a stable TPOT average while
+        # keeping a single run to tens of minutes rather than hours. (The
+        # assignment's Do-list explicitly recommends starting with few tokens.)
         text="In two sentences, explain what a transformer model is.",
-        max_new_tokens=64,
+        max_new_tokens=20,
     ),
     Prompt(
         name="medium",
