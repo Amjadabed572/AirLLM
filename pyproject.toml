@@ -6,7 +6,13 @@ readme = "README.md"
 requires-python = ">=3.10,<3.13"
 dependencies = [
     "torch>=2.2",
-    "transformers>=4.44",
+    # AirLLM 2.11 hard-imports optimum.bettertransformer, which only works with
+    # the transformers 4.4x API (transformers 5.x removed is_tf_available and
+    # BetterTransformer). Pin the whole chain to a mutually-compatible set —
+    # these exact versions were verified to import and run on the target machine.
+    "transformers>=4.44,<4.45",
+    "optimum>=1.20,<2.0",
+    "sentencepiece>=0.2",        # required by AirLLM's Baichuan tokenizer import
     "accelerate>=0.33",
     "airllm>=2.11",
     "bitsandbytes>=0.43; platform_system != 'Darwin'",
@@ -18,6 +24,7 @@ dependencies = [
 
 # NOTE on Python version: AirLLM and bitsandbytes lag the newest CPython release.
 # Pin to 3.10-3.12. Do NOT use 3.13 yet (see README "Known pitfalls").
+# NOTE on transformers: must stay <4.45 for AirLLM 2.11 — see comment above.
 
 [project.optional-dependencies]
 # Optional: only needed if you use Ollama for the baseline instead of transformers.

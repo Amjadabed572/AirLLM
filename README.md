@@ -173,6 +173,13 @@ uv pip install ollama
 ### Known pitfalls (from the assignment's Do/Don't list)
 - **Python 3.13 is too new** for AirLLM/bitsandbytes — this project pins
   `>=3.10,<3.13` (uv selects 3.12).
+- **transformers must stay `<4.45`.** AirLLM 2.11 hard-imports
+  `optimum.bettertransformer`, which breaks on transformers 5.x (removed
+  `is_tf_available`). `pyproject.toml` pins `transformers>=4.44,<4.45`,
+  `optimum<2.0`, and `sentencepiece` (needed by an AirLLM tokenizer import). If
+  you ever see `cannot import name 'is_tf_available'` or
+  `No module named 'optimum.bettertransformer'`, your transformers/optimum drifted
+  too new — reinstall with `uv pip install -e .`.
 - **Point `layer_shards_saving_path` at a drive with space** — shards are ~15 GB
   of SafeTensors for 7B and flood `C:` otherwise. Only ~40 GB is free here, so
   watch disk during the AirLLM run.
