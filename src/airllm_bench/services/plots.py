@@ -1,6 +1,7 @@
-"""Plot generation. Produces the figures the README must embed.
+"""Plot generation (Task 5.4 / visualization).
 
-Regenerates everything from results/*.json so figures always match raw data.
+Regenerates every figure from results/*.json (and the economics Scenario) so the
+figures always match the raw data. Headless-safe (Agg backend).
 """
 from __future__ import annotations
 
@@ -8,7 +9,7 @@ import os
 
 import matplotlib
 
-matplotlib.use("Agg")  # headless-safe
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
 
@@ -24,6 +25,7 @@ def _save(fig, name: str) -> str:
 
 
 def bar_metric(runs: dict[str, float], ylabel: str, title: str, fname: str) -> str:
+    """Labelled bar chart for one per-run scalar metric."""
     fig, ax = plt.subplots(figsize=(7, 4))
     labels = list(runs.keys())
     vals = [runs[k] for k in labels]
@@ -37,15 +39,15 @@ def bar_metric(runs: dict[str, float], ylabel: str, title: str, fname: str) -> s
 
 
 def grouped_ttft_tpot(data: dict[str, dict[str, float]], fname: str) -> str:
-    """data[label] = {'ttft_ms':..., 'tpot_ms':...}"""
+    """Grouped TTFT (prefill) vs TPOT (decode) bars per configuration."""
     labels = list(data.keys())
     x = np.arange(len(labels))
-    w = 0.38
+    width = 0.38
     fig, ax = plt.subplots(figsize=(7.5, 4))
     ttft = [data[k]["ttft_ms"] for k in labels]
     tpot = [data[k]["tpot_ms"] for k in labels]
-    ax.bar(x - w / 2, ttft, w, label="TTFT (prefill)", color="#4C72B0")
-    ax.bar(x + w / 2, tpot, w, label="TPOT (decode)", color="#DD8452")
+    ax.bar(x - width / 2, ttft, width, label="TTFT (prefill)", color="#4C72B0")
+    ax.bar(x + width / 2, tpot, width, label="TPOT (decode)", color="#DD8452")
     ax.set_ylabel("milliseconds")
     ax.set_title("Prefill (TTFT) vs Decode (TPOT) per configuration")
     ax.set_xticks(x)
@@ -55,6 +57,7 @@ def grouped_ttft_tpot(data: dict[str, dict[str, float]], fname: str) -> str:
 
 
 def break_even(scn, max_volume: int, fname: str) -> str:
+    """Cumulative cost vs. volume with the break-even point annotated."""
     volumes = np.linspace(1, max_volume, 400)
     curves = scn.curves(volumes)
     fig, ax = plt.subplots(figsize=(8, 4.5))
@@ -63,10 +66,12 @@ def break_even(scn, max_volume: int, fname: str) -> str:
     be = scn.break_even()
     if be is not None and be <= max_volume:
         ax.axvline(be, color="grey", linestyle="--", alpha=0.7)
-        ax.annotate(f"break-even\n~{be:,.0f} req",
-                    xy=(be, scn.curves(np.array([be]))["API (third-party)"][0]),
-                    xytext=(be * 1.05, ax.get_ylim()[1] * 0.6), fontsize=9,
-                    arrowprops=dict(arrowstyle="->", color="grey"))
+        ax.annotate(
+            f"break-even\n~{be:,.0f} req",
+            xy=(be, scn.curves(np.array([be]))["API (third-party)"][0]),
+            xytext=(be * 1.05, ax.get_ylim()[1] * 0.6), fontsize=9,
+            arrowprops={"arrowstyle": "->", "color": "grey"},
+        )
     ax.set_xlabel("Number of requests (over the amortization period)")
     ax.set_ylabel("Cumulative cost (USD)")
     ax.set_title("On-Prem vs API vs Cloud GPU: cumulative cost & break-even")

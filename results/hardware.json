@@ -4,10 +4,10 @@
   "cpu_physical_cores": 2,
   "cpu_logical_cores": 4,
   "ram_total_gb": 7.884037017822266,
-  "ram_available_gb": 0.5098953247070312,
+  "ram_available_gb": 2.3734893798828125,
   "gpu_name": "NVIDIA GeForce GTX 950M",
   "vram_total_gb": 2.0,
-  "disk_free_gb": 40.04585266113281,
+  "disk_free_gb": 24.802242279052734,
   "disk_type_hint": "SSD (Get-PhysicalDisk)",
   "python_version": "3.12.13"
 }

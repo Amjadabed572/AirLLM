@@ -124,8 +124,8 @@
 **ממצא מחושב (הנחות ברירת המחדל שהוטמעו):** נקודת איזון ≈ **230 אלף בקשות**
 בתקופת ההפחתה. מתחתיה ה-API זול יותר; מעליה On-Prem מנצח — *לפני* שקלול פרטיות,
 אבטחת מידע וזמינות לא-מקוונת, שעשויים להטות לטובת On-Prem ללא קשר לנפח. **ערכו את
-המחירים/התעריף/אורך החיים ב-`economics.py` לערכים שאתם מצטטים; האנרגיה לבקשה
-חייבת לבוא מההרצות שמדדתם.**
+המחירים/התעריף/אורך החיים ב-`config/setup.json` (קטע `economics`) לערכים שאתם
+מצטטים; האנרגיה לבקשה חייבת לבוא מההרצות שמדדתם.**
 
 ---
 
@@ -140,28 +140,37 @@
 
 ## שחזור
 
+הכול רץ דרך ה-CLI `airllm-bench` (צרכן דק של מנשק ה-SDK, `AirLLMBenchSDK`),
+מנוהל ב-uv. כל הפרמטרים הניתנים לכוונון נמצאים ב-`config/setup.json`.
+
 ```powershell
-# 1. סביבה (uv). מוצג ב-PowerShell של Windows; bash אנלוגי.
+# 1. סביבה (uv בלבד). מוצג ב-PowerShell של Windows; bash אנלוגי.
 uv venv
 uv pip install -e .                      # כבד: torch, transformers, airllm, ...
 
 # 2. תיעוד חומרה + צפייה במודל המומלץ (כבר מוטמע, אמיתי)
-.\.venv\Scripts\python.exe -m src.hardware
-.\.venv\Scripts\python.exe -m src.model_selector
+uv run airllm-bench hardware
+uv run airllm-bench model
 
-# 3. כיוון שכבות AirLLM לכונן עם מקום (ברירת מחדל .\layer_shards)
-#    PowerShell:  $env:AIRLLM_SHARDS = "D:\airllm_shards"
+# 3. (אופציונלי) כיוון שכבות AirLLM לכונן עם מקום (ברירת מחדל .\layer_shards)
+#    PowerShell:  $env:AIRLLM_SHARDS = "D:\airllm_shards"  (או ערכו config/setup.json)
 
 # 4. הרצת הניסויים
-.\.venv\Scripts\python.exe -m experiments.run_baseline     # צפוי OOM = צוואר הבקבוק
-.\.venv\Scripts\python.exe -m experiments.run_airllm       # זרימת שכבות FP16
+uv run airllm-bench baseline             # טעינה נאיבית -> OOM צפוי = צוואר הבקבוק
+uv run airllm-bench airllm               # זרימת שכבות FP16
 
 # 5. השוואת קוונטיזציה דרך Ollama/GGUF (התקינו תחילה את אפליקציית Ollama)
 uv pip install ollama
-.\.venv\Scripts\python.exe -m experiments.run_ollama       # Q4 + Q8 על CPU
+uv run airllm-bench ollama               # Q4 + Q8 על CPU
 
 # 6. בניית טבלאות + גרפים + כלכלה
-.\.venv\Scripts\python.exe -m analysis.analyze
+uv run airllm-bench analyze
+#  ... או הכול ברצף אחד:
+uv run airllm-bench all
+
+# שערי איכות
+uv run ruff check .
+uv run pytest                            # 55 בדיקות, סף כיסוי >=85%
 ```
 
 ### מלכודות ידועות (מתוך רשימת ה-Do/Don't של ההגדרה)
@@ -184,14 +193,27 @@ uv pip install ollama
 
 ```
 README.md / README.he.md     תיעוד הפרויקט (קובץ זה)
-pyproject.toml               פרויקט uv + תלויות
-src/                         חומרה, מדדים, בורר מודל, מריצים, פרומפטים
-                             (baseline_runner, airllm_runner, ollama_runner)
-experiments/                 config + run_baseline + run_airllm + run_ollama
-analysis/                    economics, plots, analyze
+pyproject.toml · uv.lock      פרויקט uv, תלויות נעולות, console script (airllm-bench)
+.env-example                  תבנית סודות (אין סודות במאגר)
+config/                       setup.json · rate_limits.json · logging_config.json (מתוגרס)
+docs/                         PRD.md · PLAN.md · TODO.md · PRD_<מנגנון>.md · PROMPT_LOG.md
+src/airllm_bench/             החבילה (ארכיטקטורת SDK)
+  ├─ sdk/sdk.py               מנשק SDK — נקודת כניסה יחידה לכל הלוגיקה
+  ├─ services/                hardware · metrics · model_selector · prompts ·
+  │                           baseline_runner · airllm_runner · ollama_runner ·
+  │                           economics · plots · analyze
+  ├─ shared/                  config.py (מנהל קונפיגורציה) · version.py
+  ├─ constants.py             מפות/Enum קבועים
+  └─ main.py                  CLI (צרכן של ה-SDK)
+tests/                        unit/ (pytest, כיסוי >=85%) + conftest.py
 results/                     hardware.json (אמיתי) + JSON לכל הרצה + summary_table.md
 figures/                     גרפים (כלכלה/Roofline אמיתיים; ביצועים ממתינים)
 reports/                     report.md (אנגלית) + report.he.md (עברית)
 ```
+
+> **הערת ארכיטקטורה (§4/§5):** כל הלוגיקה נגישה דרך `AirLLMBenchSDK`; צרכנים אינם
+> מייבאים שירותים ישירות. **שומר הסף (Gatekeeper) מתועד כלא-רלוונטי** — הפרויקט אינו
+> מבצע קריאות API חיצוניות חיות (הניתוח הכלכלי משתמש במחירים מפורסמים על הנייר).
+> ראו `docs/PLAN.md`.
 
 </div>

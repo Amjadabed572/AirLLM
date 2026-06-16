@@ -6,6 +6,13 @@ __pycache__/
 build/
 dist/
 
+# --- Test / coverage artifacts ---
+.coverage
+.coverage.*
+htmlcov/
+.pytest_cache/
+.ruff_cache/
+
 # --- Virtual environments ---
 .venv/
 venv/

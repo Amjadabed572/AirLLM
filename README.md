@@ -128,8 +128,8 @@ With the committed default assumptions the computed break-even is
 **≈ 230k requests** over the amortization period: below that the API wins on pure
 cost; above it On-Prem wins — *before* accounting for privacy, data security, and
 offline availability, which can favour On-Prem regardless of volume. **Edit the
-prices/tariff/lifetime in `economics.py` to your cited values; the energy/request
-must come from your measured runs.**
+prices/tariff/lifetime in `config/setup.json` (the `economics` section) to your
+cited values; the energy/request must come from your measured runs.**
 
 ---
 
@@ -145,29 +145,37 @@ engines (AirLLM disk-streaming vs llama.cpp CPU quantization). The
 
 ## Reproduce
 
+Everything runs through the `uv`-managed `airllm-bench` CLI (a thin consumer of
+the `AirLLMBenchSDK` facade). All tunables live in `config/setup.json`.
+
 ```powershell
-# 1. Environment (uv). Windows PowerShell shown; bash is analogous.
+# 1. Environment (uv only). Windows PowerShell shown; bash is analogous.
 uv venv
 uv pip install -e .                      # heavy: torch, transformers, airllm, ...
 
 # 2. Document hardware + see the recommended model (already committed, real)
-.\.venv\Scripts\python.exe -m src.hardware
-.\.venv\Scripts\python.exe -m src.model_selector
+uv run airllm-bench hardware
+uv run airllm-bench model
 
-# 3. Point AirLLM shards at a drive with room (defaults to .\layer_shards)
-#    PowerShell:  $env:AIRLLM_SHARDS = "D:\airllm_shards"
-#    or edit experiments/config.py
+# 3. (optional) Point AirLLM shards at a drive with room (defaults to .\layer_shards)
+#    PowerShell:  $env:AIRLLM_SHARDS = "D:\airllm_shards"   (or edit config/setup.json)
 
 # 4. Run experiments
-.\.venv\Scripts\python.exe -m experiments.run_baseline     # expect OOM = the bottleneck
-.\.venv\Scripts\python.exe -m experiments.run_airllm       # FP16 layer-streaming
+uv run airllm-bench baseline             # naive load -> expected OOM = the bottleneck
+uv run airllm-bench airllm               # FP16 layer-streaming
 
-# 5. Quantization comparison via Ollama/GGUF (install Ollama app first)
+# 5. Quantization comparison via Ollama/GGUF (install the Ollama app first)
 uv pip install ollama
-.\.venv\Scripts\python.exe -m experiments.run_ollama       # Q4 + Q8 on CPU
+uv run airllm-bench ollama               # Q4 + Q8 on CPU
 
 # 6. Build tables + figures + economics
-.\.venv\Scripts\python.exe -m analysis.analyze
+uv run airllm-bench analyze
+#  ... or do steps 4-6 in one go:
+uv run airllm-bench all
+
+# Quality gates
+uv run ruff check .
+uv run pytest                            # 55 tests, >=85% coverage gate
 ```
 
 ### Known pitfalls (from the assignment's Do/Don't list)
@@ -197,12 +205,25 @@ uv pip install ollama
 
 ```
 README.md / README.he.md     project docs (this file)
-pyproject.toml               uv project + deps
-src/                         hardware, metrics, model selector, runners, prompts
-                             (baseline_runner, airllm_runner, ollama_runner)
-experiments/                 config + run_baseline + run_airllm + run_ollama
-analysis/                    economics, plots, analyze
-results/                     hardware.json (real) + raw per-run JSON + summary_table.md
+pyproject.toml · uv.lock      uv project, pinned deps, console script (airllm-bench)
+.env-example                  secret placeholders (no secrets committed)
+config/                       setup.json · rate_limits.json · logging_config.json (versioned)
+docs/                         PRD.md · PLAN.md · TODO.md · PRD_<mechanism>.md · PROMPT_LOG.md
+src/airllm_bench/             the package (SDK architecture)
+  ├─ sdk/sdk.py               SDK facade — single entry point for ALL logic
+  ├─ services/                hardware · metrics · model_selector · prompts ·
+  │                           baseline_runner · airllm_runner · ollama_runner ·
+  │                           economics · plots · analyze
+  ├─ shared/                  config.py (config manager) · version.py
+  ├─ constants.py             immutable maps/enums
+  └─ main.py                  CLI (consumes the SDK)
+tests/                        unit/ (pytest, >=85% coverage) + conftest.py
+results/                      hardware.json (real) + raw per-run JSON + summary_table.md
 figures/                     generated PNGs (economics/roofline real; perf pending)
 reports/                     report.md (EN) + report.he.md (HE)
 ```
+
+> **Architecture note (guidelines §4/§5):** all business logic is reached through
+> `AirLLMBenchSDK`; consumers never import services directly. The **API Gatekeeper
+> is documented as N/A** — this project makes no live third-party API calls (the
+> economic analysis uses published per-token prices on paper). See `docs/PLAN.md`.
