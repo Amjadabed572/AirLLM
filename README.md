@@ -141,9 +141,17 @@ the compute-bound-prefill / memory-bound-decode split:
 
 ### Run evidence (screenshots)
 
-| Parameter study | Analysis output | Tests passing |
-|---|---|---|
-| ![study](figures/screenshots/study_output.png) | ![analyze](figures/screenshots/analyze_output.png) | ![tests](figures/screenshots/tests_passing.png) |
+**Parameter study — `airllm-bench study`:**
+
+![Parameter study output](figures/screenshots/study_output.png)
+
+**Analysis output — `airllm-bench analyze`:**
+
+![Analysis output](figures/screenshots/analyze_output.png)
+
+**Tests passing — `pytest`:**
+
+![Tests passing](figures/screenshots/tests_passing.png)
 
 ---
 
