@@ -2,6 +2,7 @@
   "label": "baseline",
   "model": "Qwen/Qwen2.5-7B-Instruct",
   "quantization": "fp16",
+  "prompt": "short",
   "prompt_tokens": 0,
   "output_tokens": 0,
   "ttft_s": 0.0,
@@ -12,6 +13,7 @@
   "peak_vram_gb": 0.0,
   "est_energy_wh": 0.0,
   "failed": true,
-  "failure_reason": "Process killed by OS during naive in-RAM load (hard OOM) \u2014 model weights exceed physical RAM; the load did not complete. (If you see this, the run never returned to Python.)",
+  "expected_failure": true,
+  "failure_reason": "Process killed by OS during naive in-RAM load (hard OOM) \u2014 model weights exceed physical RAM; the load did not complete.",
   "per_token_latencies_s": []
 }
