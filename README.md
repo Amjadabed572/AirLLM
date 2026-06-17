@@ -67,29 +67,41 @@ for the GGUF runs, and `matplotlib` for all figures.
 
 ---
 
-## 3. Results summary
+## 3. Results summary (measured)
 
-`python -m analysis.analyze` writes `results/summary_table.md` and the figures
-from whatever real runs exist in `results/`.
+`airllm-bench analyze` writes `results/summary_table.md` and the figures from the
+raw `results/*.json`. Real measurements on the machine in §1
+(Qwen2.5-7B-Instruct, "short" prompt, 20 output tokens):
 
 | Config | Quant | TTFT (s) | TPOT (ms) | tok/s | Peak RAM (GB) | Energy (Wh) | Status |
 |---|---|---|---|---|---|---|---|
-| baseline (HF direct) | fp16 | — | — | — | — | — | **PENDING run** (expected: FAILED/OOM) |
-| airllm | fp16 | _pending_ | _pending_ | _pending_ | _pending_ | _pending_ | PENDING run |
-| ollama (GGUF) | q8 | _pending_ | _pending_ | _pending_ | _pending_ | _pending_ | PENDING run |
-| ollama (GGUF) | q4 | _pending_ | _pending_ | _pending_ | _pending_ | _pending_ | PENDING run |
+| baseline (HF direct) | fp16 | — | — | — | — | — | **FAILED — OS-killed during load (OOM)** |
+| airllm | fp16 | 129.48 | 144,190 | 0.01 | 3.6 | 12.49 | ok |
+| ollama (GGUF) | q4 | 39.25 | 234.6 | **4.49** | 2.2 | 0.18 | ok |
+| ollama (GGUF) | q8 | 272.43 | 30,546 | 0.03 | 1.8 | 3.55 | ok |
 
-> Replace this table with the auto-generated `results/summary_table.md` after the
-> runs complete. **Expected shape of the result** (to be confirmed by data, not
-> assumed): the baseline cannot load at all; AirLLM runs but is heavily
-> disk-I/O-bound (seconds-per-token); Q4 < Q8 for peak RAM and TPOT, at some
-> output-quality cost — the accuracy "red line".
+**Reading the data.**
+- **Baseline fails:** the 15 GB FP16 model cannot be placed in 8 GB RAM with
+  offloading forbidden — the OS kills the load. This *is* the memory-capacity
+  bottleneck (recorded in `results/baseline_short.json`).
+- **AirLLM enables it, slowly:** the same model runs in just **3.6 GB peak RAM**
+  by streaming one layer at a time from the SSD — but each token re-reads all
+  layers from disk, so decode is ~**144 s/token** (0.01 tok/s). Classic
+  disk-I/O-bound behaviour.
+- **Quantization + fitting in RAM is the real win:** **Q4 (~4.4 GB) fits in RAM**
+  → **4.49 tok/s** (~600× faster decode than AirLLM) at 0.18 Wh/request.
+- **The RAM cliff:** **Q8 (~8 GB) does *not* fit** → llama.cpp pages it from disk
+  every token → collapses to 0.03 tok/s (~130× slower than Q4). The decisive
+  factor is not the quantization level itself but **whether the working set fits
+  in RAM**.
 
-<!-- These regenerate after model runs:
+> Note: Ollama runs in a separate process, so its "Peak RAM" is a whole-system
+> used-RAM delta (mmap-backed paging makes Q8's resident delta look small) — a
+> documented caveat, not a contradiction. See `docs/PRD_quantization.md`.
+
 ![Throughput](figures/throughput.png)
 ![Prefill vs Decode](figures/ttft_vs_tpot.png)
 ![Peak RAM](figures/peak_ram.png)
--->
 
 ---
 

@@ -10,16 +10,16 @@ Status: ☐ not started · ◐ in progress · ☑ done
 
 ## Phase 2 — Runs & measurement
 - ☑ Baseline: deterministic memory-capacity failure recorded (OOM kill captured)
-- ◐ AirLLM FP16 layer-streaming run → `results/airllm_fp16_short.json`
-- ◐ Ollama GGUF Q4 run → `results/ollama_q4_short.json`
-- ◐ Ollama GGUF Q8 run → `results/ollama_q8_short.json`
+- ☑ AirLLM FP16 layer-streaming run → `results/airllm_fp16_short.json` (129 s TTFT, 144 s/tok, 3.6 GB)
+- ☑ Ollama GGUF Q4 run → `results/ollama_q4_short.json` (4.49 tok/s, 2.2 GB, 0.18 Wh)
+- ☑ Ollama GGUF Q8 run → `results/ollama_q8_short.json` (0.03 tok/s — overflows RAM)
 - ☐ (optional) medium / long_context prompts for TTFT-vs-length sweep
 
 ## Phase 3 — Analysis & economics
 - ☑ Economic models + break-even (config-driven)
 - ☑ Roofline & break-even figures
-- ◐ Throughput / peak-RAM / TTFT-vs-TPOT figures (need the runs above)
-- ☐ Fill measured energy/request into `config/setup.json` economics
+- ☑ Throughput / peak-RAM / TTFT-vs-TPOT figures (from the real runs)
+- ☐ (optional) Fill measured energy/request into `config/setup.json` economics
 
 ## Phase 4 — Report & quality
 - ☑ README.md / README.he.md (structure, reproduce, pitfalls)
