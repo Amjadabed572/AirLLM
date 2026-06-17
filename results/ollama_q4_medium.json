@@ -1,0 +1,18 @@
+{
+  "label": "ollama-q4",
+  "model": "qwen2.5:7b-instruct-q4_K_M",
+  "quantization": "q4",
+  "prompt": "medium",
+  "prompt_tokens": 63,
+  "output_tokens": 160,
+  "ttft_s": 3.8253402,
+  "tpot_s": 0.2712830503144654,
+  "total_gen_s": 46.9593452,
+  "throughput_tok_s": 3.7093703679962013,
+  "peak_ram_gb": 0.2545433044433594,
+  "peak_vram_gb": 0.0,
+  "est_energy_wh": 0.19566393833333334,
+  "failed": false,
+  "failure_reason": "",
+  "per_token_latencies_s": []
+}
