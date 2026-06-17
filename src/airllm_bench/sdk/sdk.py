@@ -65,7 +65,8 @@ class AirLLMBenchSDK:
         """Naive baseline; pre-writes a failure record so a hard OOM kill counts."""
         model = self.resolve_model()
         out = f"{_RESULTS}/baseline_{prompt_name}.json"
-        provisional = RunMetrics(label="baseline", model=model, quantization="fp16")
+        provisional = RunMetrics(label="baseline", model=model, quantization="fp16",
+                                 prompt=prompt_name)
         provisional.failed = True
         provisional.failure_reason = (
             "Process killed by OS during naive in-RAM load (hard OOM) — model "
@@ -73,6 +74,7 @@ class AirLLMBenchSDK:
         )
         provisional.save(out)
         metrics = run_baseline(model, by_name(prompt_name), avg_power_w=self._power())
+        metrics.prompt = prompt_name
         metrics.save(out)
         return metrics
 
@@ -83,14 +85,25 @@ class AirLLMBenchSDK:
         os.makedirs(shards, exist_ok=True)
         metrics = run_airllm(self.resolve_model(), by_name(prompt_name), quant, shards,
                              avg_power_w=self._power())
+        metrics.prompt = prompt_name
         metrics.save(f"{_RESULTS}/airllm_{quant}_{prompt_name}.json")
         return metrics
 
     def run_ollama(self, quant: str, prompt_name: str) -> RunMetrics:
         """GGUF quantization run via Ollama at the given quant level."""
         metrics = run_ollama(quant, by_name(prompt_name), avg_power_w=self._power())
+        metrics.prompt = prompt_name
         metrics.save(f"{_RESULTS}/ollama_{quant}_{prompt_name}.json")
         return metrics
+
+    def run_input_length_study(self) -> list[RunMetrics]:
+        """Parameter study (guidelines §9.1): Ollama Q4 across short/medium/
+        long_context to measure how TTFT (prefill) scales with input length."""
+        results = []
+        for name in self.config.get("study.prompt_names",
+                                    ["short", "medium", "long_context"]):
+            results.append(self.run_ollama(self.config.get("study.quant", "q4"), name))
+        return results
 
     # -- analysis ----------------------------------------------------------
     def scenario(self) -> Scenario:

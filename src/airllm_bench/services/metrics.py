@@ -32,6 +32,7 @@ class RunMetrics:
     label: str
     model: str
     quantization: str
+    prompt: str = ""               # which prompt was run (short/medium/long_context)
     prompt_tokens: int = 0
     output_tokens: int = 0
     ttft_s: float = 0.0

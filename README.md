@@ -180,6 +180,9 @@ uv run airllm-bench airllm               # FP16 layer-streaming
 uv pip install ollama
 uv run airllm-bench ollama               # Q4 + Q8 on CPU
 
+# 5b. Parameter study: TTFT vs input length (Ollama Q4 across short/medium/long)
+uv run airllm-bench study
+
 # 6. Build tables + figures + economics
 uv run airllm-bench analyze
 #  ... or do steps 4-6 in one go:
@@ -239,3 +242,29 @@ reports/                     report.md (EN) + report.he.md (HE)
 > `AirLLMBenchSDK`; consumers never import services directly. The **API Gatekeeper
 > is documented as N/A** — this project makes no live third-party API calls (the
 > economic analysis uses published per-token prices on paper). See `docs/PLAN.md`.
+
+### Architecture diagram (SDK-fronted, layered)
+
+```mermaid
+flowchart TD
+    A["Consumers<br/>CLI (airllm-bench) · notebooks · future GUI/REST"] --> B
+    B["SDK facade<br/>AirLLMBenchSDK — single entry point"] --> C
+    C["Domain services<br/>hardware · metrics · model_selector · prompts ·<br/>baseline_runner · airllm_runner · ollama_runner ·<br/>economics · plots · analyze"] --> D
+    C --> S["Shared<br/>config (manager) · version · constants"]
+    D["Infrastructure<br/>torch / transformers / airllm · Ollama · file I/O · matplotlib"]
+```
+
+---
+
+## License & Credits
+
+- **License:** MIT — see [`LICENSE`](LICENSE).
+- **Author:** Amjad Abed Alrahim · University of Haifa · Course L08.
+- **Assignment & guidelines:** Dr. Yoram Segal (EX05; "Guidelines for Writing
+  Professional Software"). © Dr. Yoram Segal — used here for the course submission.
+- **Third-party software:** [AirLLM](https://github.com/lyogavin/airllm),
+  [Hugging Face Transformers](https://github.com/huggingface/transformers),
+  [PyTorch](https://pytorch.org), [Ollama](https://ollama.com) /
+  [llama.cpp](https://github.com/ggerganov/llama.cpp), and the
+  [Qwen2.5](https://huggingface.co/Qwen) model family — each under its own license.
+- **Built with** Vibe Coding (AI-assisted); see [`docs/PROMPT_LOG.md`](docs/PROMPT_LOG.md).

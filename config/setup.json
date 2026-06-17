@@ -11,6 +11,10 @@
     "avg_power_w": 15.0,
     "layer_shards_path": "layer_shards"
   },
+  "study": {
+    "quant": "q4",
+    "prompt_names": ["short", "medium", "long_context"]
+  },
   "economics": {
     "api": {
       "price_in_per_mtok": 3.0,

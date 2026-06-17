@@ -80,6 +80,22 @@ def break_even(scn, max_volume: int, fname: str) -> str:
     return _save(fig, fname)
 
 
+def ttft_vs_input(points: list[tuple[int, float]], fname: str) -> str:
+    """TTFT (prefill) as a function of input length — the parameter study."""
+    xs = [p for p, _ in points]
+    ys = [t for _, t in points]
+    fig, ax = plt.subplots(figsize=(7, 4))
+    ax.plot(xs, ys, marker="o", linewidth=2, color="#4C72B0")
+    for x, y in points:
+        ax.annotate(f"{y:.1f}s", (x, y), textcoords="offset points", xytext=(6, 6),
+                    fontsize=9)
+    ax.set_xlabel("Prompt length (input tokens)")
+    ax.set_ylabel("TTFT (s)")
+    ax.set_title("Prefill cost (TTFT) grows with input length")
+    ax.grid(True, alpha=0.3)
+    return _save(fig, fname)
+
+
 def roofline(intensity_pts: dict[str, float], peak_flops: float, peak_bw: float,
              fname: str) -> str:
     """Simple roofline: y = min(peak_flops, peak_bw * arithmetic_intensity)."""

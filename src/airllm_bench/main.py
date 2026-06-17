@@ -43,12 +43,18 @@ def _run_ollama(sdk: AirLLMBenchSDK) -> None:
             print("   " + _status(sdk.run_ollama(quant, name)))
 
 
+def _run_study(sdk: AirLLMBenchSDK) -> None:
+    for m in sdk.run_input_length_study():
+        print(f"[study] {m.label}/{m.prompt} ...\n   " + _status(m))
+
+
 def main(argv: list[str] | None = None) -> int:
     """Parse the sub-command and dispatch to the SDK."""
     parser = argparse.ArgumentParser(prog="airllm-bench", description=__doc__)
     parser.add_argument(
         "command",
-        choices=["hardware", "model", "baseline", "airllm", "ollama", "analyze", "all"],
+        choices=["hardware", "model", "baseline", "airllm", "ollama", "study",
+                 "analyze", "all"],
     )
     parser.add_argument("--config-dir", default="config")
     args = parser.parse_args(argv)
@@ -64,6 +70,8 @@ def main(argv: list[str] | None = None) -> int:
         _run_airllm(sdk)
     elif args.command == "ollama":
         _run_ollama(sdk)
+    elif args.command == "study":
+        _run_study(sdk)
     elif args.command == "analyze":
         print(sdk.analyze())
     elif args.command == "all":

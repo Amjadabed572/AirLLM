@@ -173,6 +173,9 @@ uv run airllm-bench airllm               # זרימת שכבות FP16
 uv pip install ollama
 uv run airllm-bench ollama               # Q4 + Q8 על CPU
 
+# 5b. מחקר פרמטרים: TTFT מול אורך קלט (Ollama Q4 על short/medium/long)
+uv run airllm-bench study
+
 # 6. בניית טבלאות + גרפים + כלכלה
 uv run airllm-bench analyze
 #  ... או הכול ברצף אחד:
@@ -225,5 +228,32 @@ reports/                     report.md (אנגלית) + report.he.md (עברית
 > מייבאים שירותים ישירות. **שומר הסף (Gatekeeper) מתועד כלא-רלוונטי** — הפרויקט אינו
 > מבצע קריאות API חיצוניות חיות (הניתוח הכלכלי משתמש במחירים מפורסמים על הנייר).
 > ראו `docs/PLAN.md`.
+
+### תרשים ארכיטקטורה (שכבתי, מבוסס-SDK)
+
+<div dir="ltr">
+
+```mermaid
+flowchart TD
+    A["Consumers<br/>CLI (airllm-bench) · notebooks · future GUI/REST"] --> B
+    B["SDK facade<br/>AirLLMBenchSDK — single entry point"] --> C
+    C["Domain services<br/>hardware · metrics · model_selector · prompts ·<br/>baseline_runner · airllm_runner · ollama_runner ·<br/>economics · plots · analyze"] --> D
+    C --> S["Shared<br/>config · version · constants"]
+    D["Infrastructure<br/>torch / transformers / airllm · Ollama · file I/O · matplotlib"]
+```
+
+</div>
+
+---
+
+## רישיון וייחוס
+
+- **רישיון:** MIT — ראו [`LICENSE`](LICENSE).
+- **מחבר:** אמג'ד עבד אלרחים · אוניברסיטת חיפה · שיעור L08.
+- **המטלה וההנחיות:** ד״ר יורם סגל (EX05; "הנחיות לכתיבת תוכנה מקצועית"). ©
+  ד״ר יורם סגל — בשימוש כאן עבור הגשת הקורס.
+- **תוכנת צד-שלישי:** AirLLM, Hugging Face Transformers, PyTorch, Ollama/llama.cpp,
+  ומשפחת המודלים Qwen2.5 — כל אחת תחת הרישיון שלה.
+- **נבנה בשיטת** Vibe Coding (בסיוע AI); ראו [`docs/PROMPT_LOG.md`](docs/PROMPT_LOG.md).
 
 </div>

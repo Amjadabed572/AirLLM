@@ -49,6 +49,30 @@ def test_make_figures_creates_files(tmp_path: Path, monkeypatch) -> None:
         assert Path(p).exists()
 
 
+def test_input_length_sweep_makes_plot(tmp_path: Path, monkeypatch) -> None:
+    results = tmp_path / "results"
+    results.mkdir()
+    for i, (prompt, toks) in enumerate([("short", 12), ("medium", 40), ("long_context", 1600)]):
+        row = {"label": "ollama-q4", "quantization": "q4", "prompt": prompt,
+               "prompt_tokens": toks, "ttft_s": 1.0 + i, "tpot_s": 0.2,
+               "throughput_tok_s": 4.0, "peak_ram_gb": 2.2, "peak_vram_gb": 0.0,
+               "est_energy_wh": 0.2, "failed": False}
+        (results / f"ollama_q4_{prompt}.json").write_text(json.dumps(row), encoding="utf-8")
+    monkeypatch.chdir(tmp_path)
+    paths = make_figures(load_results("results"), Scenario())
+    assert any("ttft_vs_input" in p for p in paths)
+
+
+def test_failed_row_shows_reason(tmp_path: Path) -> None:
+    _write_results(tmp_path / "results")
+    bad = tmp_path / "results" / "baseline_short.json"
+    data = json.loads(bad.read_text("utf-8"))
+    data["failure_reason"] = "Process killed by OS (OOM)"
+    bad.write_text(json.dumps(data), encoding="utf-8")
+    table = markdown_table(load_results(str(tmp_path / "results")))
+    assert "Process killed by OS (OOM)" in table
+
+
 def test_analyze_writes_summary(tmp_path: Path, monkeypatch) -> None:
     _write_results(tmp_path / "results")
     monkeypatch.chdir(tmp_path)

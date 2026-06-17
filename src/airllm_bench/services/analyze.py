@@ -30,13 +30,26 @@ def load_results(results_dir: str = "results") -> list[dict]:
     return rows
 
 
+def _short_reason(reason: str) -> str:
+    """First clause of a failure reason, for the status cell."""
+    return reason.split("—")[0].split(".")[0].strip()[:60]
+
+
+def _key(r: dict) -> str:
+    """Figure key: label plus prompt when a prompt is recorded."""
+    prompt = r.get("prompt", "")
+    return f"{r.get('label', '')} [{prompt}]" if prompt else r.get("label", "")
+
+
 def markdown_table(rows: list[dict]) -> str:
     """Render the comparison table from raw run records."""
     lines = [_TABLE_HEAD, _TABLE_SEP]
     for r in rows:
-        status = "FAILED" if r.get("failed") else "ok"
+        status = "ok" if not r.get("failed") else (
+            f"FAILED — {_short_reason(r.get('failure_reason', ''))}" or "FAILED")
         lines.append(
-            f"| {r.get('label', '')} | {r.get('label', '')} | {r.get('quantization', '')} | "
+            f"| {r.get('label', '')} | {r.get('prompt', '') or '—'} | "
+            f"{r.get('quantization', '')} | "
             f"{r.get('ttft_s', 0):.2f} | {r.get('tpot_s', 0) * 1000:.1f} | "
             f"{r.get('throughput_tok_s', 0):.2f} | {r.get('peak_ram_gb', 0):.1f} | "
             f"{r.get('peak_vram_gb', 0):.1f} | {r.get('est_energy_wh', 0):.2f} | {status} |"
@@ -49,14 +62,19 @@ def make_figures(rows: list[dict], scenario: Scenario) -> list[str]:
     paths = []
     ok = [r for r in rows if not r.get("failed")]
     if ok:
-        thr = {r["label"]: r["throughput_tok_s"] for r in ok}
+        thr = {_key(r): r["throughput_tok_s"] for r in ok}
         paths.append(plots.bar_metric(thr, "tokens / sec",
                                       "Throughput by configuration", "throughput.png"))
-        ram = {r["label"]: r["peak_ram_gb"] for r in ok}
+        ram = {_key(r): r["peak_ram_gb"] for r in ok}
         paths.append(plots.bar_metric(ram, "GB", "Peak RAM by configuration", "peak_ram.png"))
-        tt = {r["label"]: {"ttft_ms": r["ttft_s"] * 1000, "tpot_ms": r["tpot_s"] * 1000}
+        tt = {_key(r): {"ttft_ms": r["ttft_s"] * 1000, "tpot_ms": r["tpot_s"] * 1000}
               for r in ok}
         paths.append(plots.grouped_ttft_tpot(tt, "ttft_vs_tpot.png"))
+
+        # Parameter study: TTFT vs input length, if one engine ran >=2 prompts.
+        sweep = _input_length_points(ok)
+        if len(sweep) >= 2:
+            paths.append(plots.ttft_vs_input(sweep, "ttft_vs_input.png"))
 
     be = scenario.break_even()
     max_vol = int((be or 100_000) * 2.5)
@@ -64,6 +82,19 @@ def make_figures(rows: list[dict], scenario: Scenario) -> list[str]:
     paths.append(plots.roofline({"prefill": 50.0, "decode": 0.3},
                                 peak_flops=2000.0, peak_bw=50.0, fname="roofline.png"))
     return paths
+
+
+def _input_length_points(ok: list[dict]) -> list[tuple[int, float]]:
+    """(prompt_tokens, ttft_s) for the engine+quant that ran the most prompts."""
+    from collections import defaultdict
+
+    groups: dict[str, list[dict]] = defaultdict(list)
+    for r in ok:
+        groups[r.get("label", "")].append(r)
+    best = max(groups.values(), key=len, default=[])
+    pts = sorted((r.get("prompt_tokens", 0), r.get("ttft_s", 0.0)) for r in best)
+    # Only meaningful if input length actually varies.
+    return pts if len({p for p, _ in pts}) >= 2 else []
 
 
 def analyze(scenario: Scenario, results_dir: str = "results") -> str:

@@ -67,6 +67,22 @@ def test_run_ollama_saves_record(sdk: AirLLMBenchSDK, tmp_path: Path, monkeypatc
     assert (tmp_path / "results" / "ollama_q4_short.json").exists()
 
 
+def test_run_records_prompt(sdk: AirLLMBenchSDK, tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setattr(sdk_mod, "run_ollama", lambda *a, **k: _fake_metrics("ollama-q4"))
+    m = sdk.run_ollama("q4", "medium")
+    assert m.prompt == "medium"
+    saved = json.loads((tmp_path / "results" / "ollama_q4_medium.json").read_text("utf-8"))
+    assert saved["prompt"] == "medium"
+
+
+def test_input_length_study_runs_all_prompts(sdk: AirLLMBenchSDK, monkeypatch) -> None:
+    calls = []
+    monkeypatch.setattr(sdk_mod, "run_ollama",
+                        lambda *a, **k: calls.append(a) or _fake_metrics("ollama-q4"))
+    results = sdk.run_input_length_study()
+    assert len(results) == 3  # short, medium, long_context
+
+
 def test_scenario_from_config(sdk: AirLLMBenchSDK) -> None:
     assert sdk.scenario().api.in_tokens == 600
 
