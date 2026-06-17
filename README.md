@@ -1,6 +1,12 @@
 # EX05 — Running a Massive LLM Locally: AirLLM, Quantization & Performance Benchmarking
 
-> Course L08 · Dr. Yoram Segal · June 2026
+| | |
+|---|---|
+| **Group** | NajAmjad |
+| **Course** | AI Orchestration |
+| **Instructor** | Dr. Yoram Segal |
+| **Date** | June 2026 |
+
 > A reproducible, instrumented experiment that runs a large language model
 > **on-premises** on a modest 8 GB laptop using **AirLLM** layer-streaming, plus
 > a **GGUF quantization** comparison via Ollama, analysed both technically and
@@ -282,7 +288,6 @@ flowchart TD
 ## License & Credits
 
 - **License:** MIT — see [`LICENSE`](LICENSE).
-- **Author:** Amjad Abed Alrahim · University of Haifa · Course L08.
 - **Third-party software:** [AirLLM](https://github.com/lyogavin/airllm),
   [Hugging Face Transformers](https://github.com/huggingface/transformers),
   [PyTorch](https://pytorch.org), [Ollama](https://ollama.com) /

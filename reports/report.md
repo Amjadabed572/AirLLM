@@ -1,7 +1,7 @@
 # Deep-Dive Technical Report — EX05
 
 **Running a Massive LLM Locally with AirLLM, Quantization & Performance Benchmarking**
-Course L08 · Dr. Yoram Segal · June 2026
+Group NajAmjad · Course: AI Orchestration · Dr. Yoram Segal · June 2026
 
 > This report documents a real, instrumented experiment on a specific 8 GB
 > laptop. **Hardware facts and the economic model are real and final.**

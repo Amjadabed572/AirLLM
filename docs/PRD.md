@@ -1,7 +1,7 @@
 # PRD — Product Requirements Document (EX05)
 
 **Project:** Running a Massive LLM Locally — AirLLM, Quantization & Performance Benchmarking
-**Course:** L08 · Dr. Yoram Segal · June 2026
+**Group:** NajAmjad · **Course:** AI Orchestration · Dr. Yoram Segal · June 2026
 
 ## 1. Context & problem
 
