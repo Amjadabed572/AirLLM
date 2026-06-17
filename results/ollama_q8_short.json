@@ -1,0 +1,17 @@
+{
+  "label": "ollama-q8",
+  "model": "qwen2.5:7b-instruct-q8_0",
+  "quantization": "q8",
+  "prompt_tokens": 40,
+  "output_tokens": 20,
+  "ttft_s": 272.43348679999997,
+  "tpot_s": 30.545966315789475,
+  "total_gen_s": 852.8068468,
+  "throughput_tok_s": 0.03446057551642274,
+  "peak_ram_gb": 1.7804489135742188,
+  "peak_vram_gb": 0.0,
+  "est_energy_wh": 3.5533618616666667,
+  "failed": false,
+  "failure_reason": "",
+  "per_token_latencies_s": []
+}
