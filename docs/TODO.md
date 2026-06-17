@@ -13,7 +13,7 @@ Status: ☐ not started · ◐ in progress · ☑ done
 - ☑ AirLLM FP16 layer-streaming run → `results/airllm_fp16_short.json` (129 s TTFT, 144 s/tok, 3.6 GB)
 - ☑ Ollama GGUF Q4 run → `results/ollama_q4_short.json` (4.49 tok/s, 2.2 GB, 0.18 Wh)
 - ☑ Ollama GGUF Q8 run → `results/ollama_q8_short.json` (0.03 tok/s — overflows RAM)
-- ☐ (optional) medium / long_context prompts for TTFT-vs-length sweep
+- ☑ Parameter study: Ollama Q4 across short/medium/long_context (TTFT-vs-length) → `airllm-bench study`
 
 ## Phase 3 — Analysis & economics
 - ☑ Economic models + break-even (config-driven)
@@ -26,7 +26,9 @@ Status: ☐ not started · ◐ in progress · ☑ done
 - ☑ reports/report.md / report.he.md (framework + pending-result markers)
 - ☑ docs/ suite (PRD, PLAN, TODO, per-mechanism PRDs, prompt log)
 - ☑ ruff clean · ☑ ≥85% test coverage (93%) · ☑ files ≤150 code lines
-- ☐ Paste final measured numbers into report tables once runs complete
+- ☑ Measured numbers filled into README + reports (EN+HE) tables
+- ☑ Run screenshots embedded (`figures/screenshots/`)
+- ☑ LICENSE + Credits, architecture diagram, analysis notebook, self-assessment (`docs/SELF_ASSESSMENT.md`)
 
 **Definition of done (each run task):** a real `results/*.json` exists, the figure
 regenerates from it via `airllm-bench analyze`, and the number is cited in the report.

@@ -77,8 +77,11 @@ raw `results/*.json`. Real measurements on the machine in §1
 |---|---|---|---|---|---|---|---|
 | baseline (HF direct) | fp16 | — | — | — | — | — | **FAILED — OS-killed during load (OOM)** |
 | airllm | fp16 | 129.48 | 144,190 | 0.01 | 3.6 | 12.49 | ok |
-| ollama (GGUF) | q4 | 39.25 | 234.6 | **4.49** | 2.2 | 0.18 | ok |
+| ollama (GGUF) | q4 | 44.44\* | 245.1 | **4.29** | 1.8 | 0.20 | ok |
 | ollama (GGUF) | q8 | 272.43 | 30,546 | 0.03 | 1.8 | 3.55 | ok |
+
+\* Q4's TTFT here includes the **one-time model load into RAM** (~40 s on first
+call); the warm prefill is ~3.8 s — see the input-length study below.
 
 **Reading the data.**
 - **Baseline fails:** the 15 GB FP16 model cannot be placed in 8 GB RAM with
@@ -89,9 +92,10 @@ raw `results/*.json`. Real measurements on the machine in §1
   layers from disk, so decode is ~**144 s/token** (0.01 tok/s). Classic
   disk-I/O-bound behaviour.
 - **Quantization + fitting in RAM is the real win:** **Q4 (~4.4 GB) fits in RAM**
-  → **4.49 tok/s** (~600× faster decode than AirLLM) at 0.18 Wh/request.
+  → **4.29 tok/s** decode (245 ms/token, **~590× faster** than AirLLM's 144 s) at
+  ~0.20 Wh/request (**~60× less energy** than AirLLM's 12.49 Wh).
 - **The RAM cliff:** **Q8 (~8 GB) does *not* fit** → llama.cpp pages it from disk
-  every token → collapses to 0.03 tok/s (~130× slower than Q4). The decisive
+  every token → collapses to 0.03 tok/s (~125× slower than Q4). The decisive
   factor is not the quantization level itself but **whether the working set fits
   in RAM**.
 
@@ -102,6 +106,27 @@ raw `results/*.json`. Real measurements on the machine in §1
 ![Throughput](figures/throughput.png)
 ![Prefill vs Decode](figures/ttft_vs_tpot.png)
 ![Peak RAM](figures/peak_ram.png)
+
+### Parameter study — TTFT vs input length (Task 5.7 secondary extension)
+
+Ollama Q4 across three prompt lengths (`airllm-bench study`). Reading the **warm**
+runs (the first call also pays the one-time model load), prefill cost (TTFT)
+clearly grows with input length while decode (TPOT) stays roughly flat — exactly
+the compute-bound-prefill / memory-bound-decode split:
+
+| Prompt | Input tokens | TTFT (s) | TPOT (ms) | tok/s |
+|---|---|---|---|---|
+| short | ~12 | 44.44 (incl. cold-start load) | 245.1 | 4.29 |
+| medium (warm) | ~40 | 3.83 | 271.3 | 3.71 |
+| long_context (warm) | ~1600 | 57.06 | 286.6 | 3.52 |
+
+![TTFT vs input length](figures/ttft_vs_input.png)
+
+### Run evidence (screenshots)
+
+| Parameter study | Analysis output | Tests passing |
+|---|---|---|
+| ![study](figures/screenshots/study_output.png) | ![analyze](figures/screenshots/analyze_output.png) | ![tests](figures/screenshots/tests_passing.png) |
 
 ---
 
@@ -268,3 +293,4 @@ flowchart TD
   [llama.cpp](https://github.com/ggerganov/llama.cpp), and the
   [Qwen2.5](https://huggingface.co/Qwen) model family — each under its own license.
 - **Built with** Vibe Coding (AI-assisted); see [`docs/PROMPT_LOG.md`](docs/PROMPT_LOG.md).
+- **Rubric compliance & self-score:** [`docs/SELF_ASSESSMENT.md`](docs/SELF_ASSESSMENT.md).

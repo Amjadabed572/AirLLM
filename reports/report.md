@@ -96,12 +96,32 @@ tokens). Numbers are generated into `results/summary_table.md` by
 |---|---|---|---|---|---|---|---|
 | baseline (HF) | fp16 | — | — | — | — | — | **FAILED — OS-killed during load (OOM)** |
 | airllm | fp16 | 129.48 | 144,190 | 0.01 | 3.6 | 12.49 | ok |
-| ollama | q4 | 39.25 | 234.6 | **4.49** | 2.2 | 0.18 | ok |
+| ollama | q4 | 44.44\* | 245.1 | **4.29** | 1.8 | 0.20 | ok |
 | ollama | q8 | 272.43 | 30,546 | 0.03 | 1.8 | 3.55 | ok |
+
+\* Q4 TTFT includes the one-time model load (~40 s); warm prefill ≈ 3.8 s (see §3.1).
 
 ![Throughput](../figures/throughput.png)
 ![TTFT vs TPOT](../figures/ttft_vs_tpot.png)
 ![Peak RAM](../figures/peak_ram.png)
+
+### 3.1 Parameter study — TTFT vs input length (Task 5.7)
+
+Ollama Q4 across three prompt lengths (`airllm-bench study`). The first call also
+pays a one-time model load; reading the **warm** runs isolates prefill:
+
+| Prompt | Input tokens | TTFT (s) | TPOT (ms) | tok/s |
+|---|---|---|---|---|
+| short | ~12 | 44.44 (cold-start load) | 245.1 | 4.29 |
+| medium (warm) | ~40 | 3.83 | 271.3 | 3.71 |
+| long_context (warm) | ~1600 | 57.06 | 286.6 | 3.52 |
+
+Prefill (TTFT) rises sharply with input length (3.8 s → 57 s for ~40 → ~1600
+tokens) because it is a compute over *all* prompt tokens, while TPOT stays ~flat
+(245–287 ms): decode is per-token and memory-bound. This is the prefill/decode
+split, measured.
+
+![TTFT vs input length](../figures/ttft_vs_input.png)
 
 **Interpretation (backed by the data above).**
 - **The baseline is a hard memory-capacity wall.** With a 6 GiB RAM budget and
