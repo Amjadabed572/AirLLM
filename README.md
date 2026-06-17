@@ -85,15 +85,15 @@ raw `results/*.json`. Real measurements on the machine in §1
 |---|---|---|---|---|---|---|---|---|
 | baseline (HF direct) | fp16 | — | — | — | — | — | — | **expected OOM ✓ — bottleneck confirmed** |
 | airllm | fp16 | 122.61 | 128,494 | 0.01 | 2564 | 3.6 | 11.19 | ok |
-| ollama (GGUF) | q4 | 39.51\* | 255.4 | **4.12** | 44.4 | 0.1† | 0.18 | ok |
-| ollama (GGUF) | q8 | 228.70 | 30,161 | 0.03 | 801.8 | 0.4† | 3.34 | ok |
+| ollama (GGUF) | q4 | 52.13\* | 295.7 | **3.56** | 57.7 | 4.2 | 0.24 | ok |
+| ollama (GGUF) | q8 | 234.38 | 28,140 | 0.04 | 769.0 | 5.0 | 3.20 | ok |
 
-\* Q4's TTFT includes the **one-time model load into RAM** (~37 s on first call);
-the warm prefill is ~4 s — see the input-length study below.
-† Ollama peak RAM is a whole-system delta measured from another process; with the
-model server already resident it reads near-zero and is **not** a reliable
-footprint. The real footprints are ~4.4 GB (Q4) and ~8 GB (Q8) **by design** —
-the decisive evidence is the decode speed, not this column.
+\* Q4's TTFT includes the **one-time model load into RAM** (~48 s on first call);
+the warm prefill is ~4.5 s — see the input-length study below.
+Peak RAM is the measured RSS of the **Ollama process tree**, and it confirms the
+cliff: Q4 sits at **~4.2 GB** (≈ its ~4.4 GB footprint → fits 8 GB), while Q8 can
+hold only **~5.0 GB** resident before RAM runs out and the rest of its ~8 GB pages
+from disk → 0.04 tok/s.
 
 **Reading the data.**
 - **Baseline fails:** the 15 GB FP16 model cannot be placed in 8 GB RAM with
@@ -103,22 +103,22 @@ the decisive evidence is the decode speed, not this column.
   by streaming one layer at a time from the SSD — but each token re-reads all
   layers from disk, so decode is ~**128 s/token** (0.01 tok/s). Classic
   disk-I/O-bound behaviour.
-- **Quantization + fitting in RAM is the real win:** **Q4 (~4.4 GB) fits in RAM**
-  → **4.12 tok/s** decode (255 ms/token, **~500× faster** than AirLLM's 128 s) at
-  ~0.18 Wh/request (**~60× less energy** than AirLLM's 11.19 Wh).
-- **The RAM cliff:** **Q8 (~8 GB) does *not* fit** → llama.cpp pages it from disk
-  every token → collapses to 0.03 tok/s (~**120× slower** than Q4). The decisive
-  factor is not the quantization level itself but **whether the working set fits
-  in RAM**.
+- **Quantization + fitting in RAM is the real win:** **Q4 (~4.2 GB measured) fits
+  in RAM** → **3.56 tok/s** decode (296 ms/token, **~430× faster** than AirLLM's
+  128 s) at ~0.24 Wh/request (**~47× less energy** than AirLLM's 11.19 Wh).
+- **The RAM cliff:** **Q8 (~8 GB) does *not* fit** (only ~5 GB stays resident) →
+  llama.cpp pages the rest from disk every token → collapses to 0.04 tok/s
+  (~**95× slower** than Q4). The decisive factor is not the quantization level
+  itself but **whether the working set fits in RAM** — and the peak-RAM column
+  shows it directly.
 - **Output quality per level (5.4)** — a brief note, since the brief states quality
   is not this work's focus: FP16 is the reference; **Q8 (`q8_0`)** is near-lossless;
   **Q4 (`q4_K_M`)** shows only minor degradation, acceptable for general use. So the
   limiting "red line" here is feasibility, not accuracy — Q4 is good enough at a
   usable speed, while Q8 is unusable on this hardware.
 
-> Note: Ollama runs in a separate process, so its "Peak RAM" is a whole-system
-> used-RAM delta — unreliable here (see †). The decode-speed gap (4.12 vs
-> 0.03 tok/s) is the trustworthy signal. See `docs/PRD_quantization.md`.
+> Note: Ollama runs in a separate process, so peak RAM is sampled from the Ollama
+> process tree (not this script's RSS). See `docs/PRD_quantization.md`.
 
 ![Throughput](figures/throughput.png)
 ![Prefill vs Decode](figures/ttft_vs_tpot.png)
@@ -133,9 +133,9 @@ the compute-bound-prefill / memory-bound-decode split:
 
 | Prompt | Input tokens | TTFT (s) | TPOT (ms) | tok/s | Total (s) |
 |---|---|---|---|---|---|
-| short | ~12 | 39.51 (incl. cold-start load) | 255.4 | 4.12 | 44.4 |
-| medium (warm) | ~40 | 4.30 | 285.6 | 3.52 | 49.7 |
-| long_context (warm) | ~620 | 63.48 | 362.8 | 2.78 | 103.0 |
+| short | ~12 | 52.13 (incl. cold-start load) | 295.7 | 3.56 | 57.7 |
+| medium (warm) | ~40 | 4.49 | 266.3 | 3.78 | 46.8 |
+| long_context (warm) | ~620 | 63.97 | 466.4 | 2.16 | 114.8 |
 
 ![TTFT vs input length](figures/ttft_vs_input.png)
 
@@ -168,7 +168,8 @@ the compute-bound-prefill / memory-bound-decode split:
 
 ![Break-even](figures/break_even.png)
 
-Two transparent cost models in [`analysis/economics.py`](analysis/economics.py),
+Two transparent cost models in
+[`src/airllm_bench/services/economics.py`](src/airllm_bench/services/economics.py),
 all assumptions editable and stated:
 
 - **API:** `requests × (in·price_in + out·price_out)`, with optional
@@ -178,7 +179,7 @@ all assumptions editable and stated:
   Wh/request) + maintenance.
 - **Optional cloud GPU:** hourly rate × seconds/request.
 
-The on-prem energy term is **driven by the measured run** — 0.21 Wh/request from
+The on-prem energy term is **driven by the measured run** — 0.20 Wh/request from
 the warm Q4 run (the config the analysis assumes you'd actually serve), not a
 guessed figure. With the stated price/tariff/lifetime assumptions the computed
 break-even is **≈ 157k requests** over the amortization period: below that the API

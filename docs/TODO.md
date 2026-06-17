@@ -11,8 +11,8 @@ Status: ☐ not started · ◐ in progress · ☑ done
 ## Phase 2 — Runs & measurement
 - ☑ Baseline: deterministic memory-capacity failure recorded (OOM kill captured)
 - ☑ AirLLM FP16 layer-streaming run → `results/airllm_fp16_short.json` (129 s TTFT, 144 s/tok, 3.6 GB)
-- ☑ Ollama GGUF Q4 run → `results/ollama_q4_short.json` (4.49 tok/s, 2.2 GB, 0.18 Wh)
-- ☑ Ollama GGUF Q8 run → `results/ollama_q8_short.json` (0.03 tok/s — overflows RAM)
+- ☑ Ollama GGUF Q4 run → `results/ollama_q4_short.json` (3.56 tok/s, 4.2 GB, 0.24 Wh)
+- ☑ Ollama GGUF Q8 run → `results/ollama_q8_short.json` (0.04 tok/s, 5.0 GB — overflows RAM)
 - ☑ Parameter study: Ollama Q4 across short/medium/long_context (TTFT-vs-length) → `airllm-bench study`
 
 ## Phase 3 — Analysis & economics

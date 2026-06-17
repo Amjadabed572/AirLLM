@@ -97,12 +97,13 @@ tokens). Numbers are generated into `results/summary_table.md` by
 |---|---|---|---|---|---|---|---|---|
 | baseline (HF) | fp16 | — | — | — | — | — | — | **expected OOM ✓ — bottleneck confirmed** |
 | airllm | fp16 | 122.61 | 128,494 | 0.01 | 2564 | 3.6 | 11.19 | ok |
-| ollama | q4 | 39.51\* | 255.4 | **4.12** | 44.4 | 0.1† | 0.18 | ok |
-| ollama | q8 | 228.70 | 30,161 | 0.03 | 801.8 | 0.4† | 3.34 | ok |
+| ollama | q4 | 52.13\* | 295.7 | **3.56** | 57.7 | 4.2 | 0.24 | ok |
+| ollama | q8 | 234.38 | 28,140 | 0.04 | 769.0 | 5.0 | 3.20 | ok |
 
-\* Q4 TTFT includes the one-time model load (~37 s); warm prefill ≈ 4 s (see §3.1).
-† Ollama peak RAM is a whole-system delta from another process (server already
-resident → near-zero); the real footprints are ~4.4 GB (Q4) / ~8 GB (Q8) by design.
+\* Q4 TTFT includes the one-time model load (~48 s); warm prefill ≈ 4.5 s (see §3.1).
+Peak RAM = measured RSS of the Ollama process tree; it confirms the cliff — Q4 ~4.2 GB
+(≈ its ~4.4 GB footprint → fits 8 GB), Q8 only ~5.0 GB resident before the rest of
+its ~8 GB pages from disk (→ 0.04 tok/s).
 
 ![Throughput](../figures/throughput.png)
 ![TTFT vs TPOT](../figures/ttft_vs_tpot.png)
@@ -115,13 +116,13 @@ pays a one-time model load; reading the **warm** runs isolates prefill:
 
 | Prompt | Input tokens | TTFT (s) | TPOT (ms) | tok/s | Total (s) |
 |---|---|---|---|---|---|
-| short | ~12 | 39.51 (cold-start load) | 255.4 | 4.12 | 44.4 |
-| medium (warm) | ~40 | 4.30 | 285.6 | 3.52 | 49.7 |
-| long_context (warm) | ~620 | 63.48 | 362.8 | 2.78 | 103.0 |
+| short | ~12 | 52.13 (cold-start load) | 295.7 | 3.56 | 57.7 |
+| medium (warm) | ~40 | 4.49 | 266.3 | 3.78 | 46.8 |
+| long_context (warm) | ~620 | 63.97 | 466.4 | 2.16 | 114.8 |
 
-Prefill (TTFT) rises sharply with input length (4.3 s → 63 s for ~40 → ~620
+Prefill (TTFT) rises sharply with input length (4.5 s → 64 s for ~40 → ~620
 tokens) because it is a compute over *all* prompt tokens, while TPOT stays in a
-narrow band (255–363 ms): decode is per-token and memory-bound. This is the
+narrow band (266–466 ms): decode is per-token and memory-bound. This is the
 prefill/decode split, measured.
 
 ![TTFT vs input length](../figures/ttft_vs_input.png)
@@ -134,11 +135,13 @@ prefill/decode split, measured.
   RAM** (well within 8 GB) but at **128 s/token** — because every decode step
   re-streams all 31 layer shards from the SATA SSD. The win is *feasibility*, not
   speed: 0.01 tok/s is batch-only.
-- **Fitting the working set in RAM is the dominant factor.** Q4 (~4.4 GB) fits →
-  **4.12 tok/s**, roughly **500× faster decode than AirLLM** (255 ms vs 128 s) and
-  **~60× less energy/request** (0.18 vs 11.19 Wh). Q8 (~8 GB) does *not* fit on
-  8 GB RAM, so llama.cpp pages it from disk per token and collapses to 0.03 tok/s
-  — **~120× slower than Q4**. The cliff is set by the RAM boundary, not the bit-width.
+- **Fitting the working set in RAM is the dominant factor.** Q4 (~4.2 GB measured)
+  fits → **3.56 tok/s**, roughly **430× faster decode than AirLLM** (296 ms vs
+  128 s) and **~47× less energy/request** (0.24 vs 11.19 Wh). Q8 (~8 GB) does *not*
+  fit on 8 GB RAM (only ~5 GB stays resident), so llama.cpp pages the rest from
+  disk per token and collapses to 0.04 tok/s — **~95× slower than Q4**. The cliff
+  is set by the RAM boundary, not the bit-width — and the measured peak RAM
+  (4.2 vs 5.0 GB) shows it directly.
 - **Qualitative output quality per level (5.4).** The brief states output quality
   is *not* the focus of this work, so this is a brief reasoned assessment, not a
   benchmark: **FP16** (the AirLLM run) is the full-precision reference; **Q8
@@ -148,10 +151,11 @@ prefill/decode split, measured.
   use. The "red line" here is therefore set by *feasibility*, not accuracy: Q8 is
   unusable on this hardware (disk-bound), so **Q4 is the practical local choice** —
   good enough quality at a working speed.
-- **Ollama peak-RAM caveat:** Ollama is a separate process; its peak RAM is a
-  whole-system used-delta that reads near-zero once the server is resident, so it
-  is not a reliable footprint — the slow TPOT, not the RAM number, is what reveals
-  Q8 doesn't fit (real footprints ~4.4 GB Q4 / ~8 GB Q8 by design).
+- **Ollama peak-RAM method.** Ollama runs the model in a separate process, so peak
+  RAM is sampled as the RSS of the Ollama process tree (not this script's RSS). The
+  result is meaningful: Q4 ≈ 4.2 GB matches its ~4.4 GB footprint, and Q8 caps at
+  ~5.0 GB resident (it can't fully fit, so the OS pages the rest) — the RAM column
+  and the decode speed tell the same story.
 
 ---
 
@@ -166,18 +170,19 @@ prefill/decode split, measured.
    resident and pages the rest from disk — the virtual-memory analogy for model
    weights. RAM use drops from "whole model" to "one layer + activations".
 3. **Effect of quantization on memory, speed, paging, quality?** Measured: Q4
-   (~4.4 GB) fits in RAM and reaches 4.12 tok/s; Q8 (~8 GB) overflows RAM, so it
-   is paged from disk and collapses to 0.03 tok/s — a ~120× gap driven by the RAM
-   boundary, not the bit-width per se. Quality favours Q8, but on this hardware Q8
-   is unusable, so Q4 is the practical choice (the accuracy/feasibility red line).
+   (~4.2 GB resident) fits in RAM and reaches 3.56 tok/s; Q8 (~8 GB) overflows RAM
+   (only ~5 GB resident), so it is paged from disk and collapses to 0.04 tok/s — a
+   ~95× gap driven by the RAM boundary, not the bit-width per se. Quality favours
+   Q8, but on this hardware Q8 is unusable, so Q4 is the practical choice (the
+   accuracy/feasibility red line).
 4. **How do Prefill/Decode show up as TTFT vs TPOT?** TTFT tracks prefill
    (compute-bound, grows with prompt length — see the `long_context` prompt);
    TPOT tracks decode (memory-bound, roughly flat per token).
 5. **The Latency/Throughput price of running a big model on modest hardware?**
-   Measured TTFT ranges from ~40 s (Q4) to 123–229 s (AirLLM / Q8); throughput from
-   4.12 tok/s (Q4, usable interactively-ish) down to 0.01–0.03 tok/s (AirLLM / Q8,
-   batch-only). The price of "it runs at all" on 8 GB is steep latency unless the
-   working set fits in RAM.
+   Measured TTFT ranges from ~4.5 s (warm Q4) to 123–234 s (AirLLM / Q8);
+   throughput from 3.56 tok/s (Q4, usable interactively-ish) down to 0.01–0.04
+   tok/s (AirLLM / Q8, batch-only). The price of "it runs at all" on 8 GB is steep
+   latency unless the working set fits in RAM.
 6. **When is local economically worth it vs an external API?** See §6.
 
 ---
@@ -216,7 +221,7 @@ Two transparent models (`airllm_bench/services/economics.py`, assumptions from
 
 ![Break-even](../figures/break_even.png)
 
-**Computed finding.** The on-prem energy term uses the **measured** 0.21 Wh/request
+**Computed finding.** The on-prem energy term uses the **measured** 0.20 Wh/request
 from the warm Q4 run (the practical local-serving config), not a guessed value;
 with the stated price/tariff/lifetime assumptions the break-even is ≈ **157k
 requests** over the amortization period. Below it the API wins on cost; above it
@@ -248,8 +253,8 @@ A naive local run of a 7B model was **infeasible** on this 7.9 GB laptop — the
 killed the load (memory-capacity bottleneck). AirLLM made the *same* model run in
 3.6 GB by paging layers from the SSD, proving feasibility at the cost of
 128 s/token. GGUF quantization made inference genuinely usable **only when the
-quantized weights fit in RAM**: Q4 (~4.4 GB) reached 4.12 tok/s and 0.18 Wh/req,
-while Q8 (~8 GB) overflowed RAM and collapsed to 0.03 tok/s — ~120× slower —
+quantized weights fit in RAM**: Q4 (~4.2 GB) reached 3.56 tok/s and 0.24 Wh/req,
+while Q8 (~8 GB) overflowed RAM and collapsed to 0.04 tok/s — ~95× slower —
 despite a "smaller" step than fp16→Q4. Economically, local serving is rational
 only above the computed break-even (~157k requests with the stated assumptions)
 or when privacy/security/offline needs dominate. The decisive engineering
