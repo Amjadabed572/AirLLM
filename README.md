@@ -103,6 +103,11 @@ the decisive evidence is the decode speed, not this column.
   every token → collapses to 0.03 tok/s (~**120× slower** than Q4). The decisive
   factor is not the quantization level itself but **whether the working set fits
   in RAM**.
+- **Output quality per level (5.4)** — a brief note, since the brief states quality
+  is not this work's focus: FP16 is the reference; **Q8 (`q8_0`)** is near-lossless;
+  **Q4 (`q4_K_M`)** shows only minor degradation, acceptable for general use. So the
+  limiting "red line" here is feasibility, not accuracy — Q4 is good enough at a
+  usable speed, while Q8 is unusable on this hardware.
 
 > Note: Ollama runs in a separate process, so its "Peak RAM" is a whole-system
 > used-RAM delta — unreliable here (see †). The decode-speed gap (4.12 vs

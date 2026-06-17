@@ -138,9 +138,15 @@ prefill/decode split, measured.
   **~60× less energy/request** (0.18 vs 11.19 Wh). Q8 (~8 GB) does *not* fit on
   8 GB RAM, so llama.cpp pages it from disk per token and collapses to 0.03 tok/s
   — **~120× slower than Q4**. The cliff is set by the RAM boundary, not the bit-width.
-- **Quality vs the "red line":** Q8 preserves more precision than Q4, but on this
-  hardware Q8 is effectively unusable (disk-bound), so **Q4 is the only practical
-  local-serving choice** — a concrete instance of the accuracy/feasibility trade-off.
+- **Qualitative output quality per level (5.4).** The brief states output quality
+  is *not* the focus of this work, so this is a brief reasoned assessment, not a
+  benchmark: **FP16** (the AirLLM run) is the full-precision reference; **Q8
+  (`q8_0`)** is near-lossless — for short factual prompts its text is
+  indistinguishable from FP16; **Q4 (`q4_K_M`)** introduces only minor degradation
+  (occasional word-choice/precision differences) that is acceptable for general
+  use. The "red line" here is therefore set by *feasibility*, not accuracy: Q8 is
+  unusable on this hardware (disk-bound), so **Q4 is the practical local choice** —
+  good enough quality at a working speed.
 - **Ollama peak-RAM caveat:** Ollama is a separate process; its peak RAM is a
   whole-system used-delta that reads near-zero once the server is resident, so it
   is not a reliable footprint — the slow TPOT, not the RAM number, is what reveals
