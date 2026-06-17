@@ -1,6 +1,6 @@
 {
   "version": "1.00",
-  "_note": "Present for guideline completeness. This project makes NO live third-party API calls (economic analysis uses published per-token prices on paper, a deliberate $0 design), so the API gatekeeper is documented as N/A in docs/PLAN.md. These limits would apply if a live provider were ever wired in.",
+  "_note": "Placeholder only. This project makes NO live third-party API calls (the economic analysis uses published per-token prices), so these limits are unused; they would apply if a live provider were ever wired in.",
   "services": {
     "default": {
       "requests_per_minute": 30,

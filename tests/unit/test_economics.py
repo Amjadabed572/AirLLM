@@ -60,3 +60,8 @@ def test_from_config_roundtrip(cfg) -> None:
 def test_summarize_mentions_break_even() -> None:
     assert "Break-even" in summarize(Scenario())
     assert "NEVER" in summarize(Scenario(api=APIParams(in_tokens=0, out_tokens=0)))
+
+
+def test_summarize_includes_cloud_line() -> None:
+    text = summarize(Scenario(cloud=CloudGPUParams(enabled=True)))
+    assert "Cloud GPU" in text

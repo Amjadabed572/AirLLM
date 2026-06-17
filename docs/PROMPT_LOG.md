@@ -1,4 +1,4 @@
-# Prompt Engineering Log (guidelines §8.3)
+# Prompt Engineering Log
 
 This project was built with Vibe Coding — a human architect directing an AI agent.
 This log records the significant prompts, their intent, and how the approach
@@ -30,11 +30,10 @@ evolved. It is a faithful summary, not a verbatim transcript.
   write a provisional failure record so the kill is still captured.
 - **Lesson:** make the negative result deterministic *and* recordable.
 
-## 5. Professional-guidelines refactor
-- **Intent:** apply Dr. Segal's excellence rubric.
+## 5. Production-quality refactor
+- **Intent:** make the project professional and maintainable.
 - **Action:** restructured to `src/airllm_bench/{sdk,services,shared}`, added a config
-  manager (no hardcoded values), version tracking, docs/ suite, ruff-clean lint,
-  and a pytest suite at 93% coverage. Documented the API Gatekeeper as N/A (no live
-  API calls — $0 design).
+  manager (no hardcoded values), version tracking, a docs/ suite, ruff-clean lint,
+  and a pytest suite at high coverage. No live API client (zero-spend design).
 - **Lesson:** an SDK facade + config-driven design makes the work testable and
   reproducible.

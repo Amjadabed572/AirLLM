@@ -1,4 +1,4 @@
-"""SDK layer (guidelines §4.1) -- the single entry point for ALL business logic.
+"""SDK layer -- the single entry point for ALL business logic.
 
 Every consumer (CLI, notebooks, future GUI/REST) goes through this facade; none
 import the service modules directly. All tunables are read from config via the
@@ -68,6 +68,7 @@ class AirLLMBenchSDK:
         provisional = RunMetrics(label="baseline", model=model, quantization="fp16",
                                  prompt=prompt_name)
         provisional.failed = True
+        provisional.expected_failure = True  # not-loading IS the intended result
         provisional.failure_reason = (
             "Process killed by OS during naive in-RAM load (hard OOM) — model "
             "weights exceed physical RAM; the load did not complete."
@@ -75,6 +76,7 @@ class AirLLMBenchSDK:
         provisional.save(out)
         metrics = run_baseline(model, by_name(prompt_name), avg_power_w=self._power())
         metrics.prompt = prompt_name
+        metrics.expected_failure = True  # the baseline is expected to not fit
         metrics.save(out)
         return metrics
 
@@ -97,8 +99,8 @@ class AirLLMBenchSDK:
         return metrics
 
     def run_input_length_study(self) -> list[RunMetrics]:
-        """Parameter study (guidelines §9.1): Ollama Q4 across short/medium/
-        long_context to measure how TTFT (prefill) scales with input length."""
+        """Parameter study: Ollama Q4 across short/medium/long_context to measure
+        how TTFT (prefill) scales with input length."""
         results = []
         for name in self.config.get("study.prompt_names",
                                     ["short", "medium", "long_context"]):

@@ -22,13 +22,13 @@ Status: ☐ not started · ◐ in progress · ☑ done
 - ☐ (optional) Fill measured energy/request into `config/setup.json` economics
 
 ## Phase 4 — Report & quality
-- ☑ README.md / README.he.md (structure, reproduce, pitfalls)
-- ☑ reports/report.md / report.he.md (framework + pending-result markers)
+- ☑ README.md (structure, reproduce, pitfalls)
+- ☑ reports/report.md (deep-dive technical report)
 - ☑ docs/ suite (PRD, PLAN, TODO, per-mechanism PRDs, prompt log)
-- ☑ ruff clean · ☑ ≥85% test coverage (93%) · ☑ files ≤150 code lines
+- ☑ ruff clean · ☑ ≥90% test coverage (97%) · ☑ files ≤150 code lines
 - ☑ Measured numbers filled into README + reports (EN+HE) tables
 - ☑ Run screenshots embedded (`figures/screenshots/`)
-- ☑ LICENSE + Credits, architecture diagram, analysis notebook, self-assessment (`docs/SELF_ASSESSMENT.md`)
+- ☑ LICENSE + Credits, architecture diagram, analysis notebook
 
 **Definition of done (each run task):** a real `results/*.json` exists, the figure
 regenerates from it via `airllm-bench analyze`, and the number is cited in the report.

@@ -43,6 +43,7 @@ class RunMetrics:
     peak_vram_gb: float = 0.0
     est_energy_wh: float = 0.0
     failed: bool = False
+    expected_failure: bool = False   # True when not-completing IS the intended result
     failure_reason: str = ""
     per_token_latencies_s: list[float] = field(default_factory=list)
 

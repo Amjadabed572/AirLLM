@@ -6,8 +6,8 @@ Two independent cost models plus optional scenarios:
   2) On-Prem = amortized CAPEX + OPEX (electricity from measured energy + upkeep).
   3) Cloud GPU (optional) = gpu_hourly_rate * seconds_per_request.
 
-All assumptions come from config/setup.json (no hardcoded values, guidelines
-§7.2) so the analysis is transparent and reproducible.
+All assumptions come from config/setup.json (no hardcoded values) so the analysis
+is transparent and reproducible.
 """
 from __future__ import annotations
 

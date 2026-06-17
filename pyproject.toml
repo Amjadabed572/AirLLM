@@ -57,13 +57,12 @@ ignore = ["E501"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "--cov=airllm_bench --cov-report=term-missing --cov-fail-under=85"
+addopts = "--cov=airllm_bench --cov-report=term-missing --cov-fail-under=90"
 
 [tool.coverage.run]
 source = ["airllm_bench"]
 # Heavy/IO modules that require torch/airllm/ollama or a display are exercised
-# via mocks/integration only and excluded from the unit-coverage gate
-# (guidelines §6.2 permit omitting such modules).
+# via mocks/integration only and excluded from the unit-coverage gate.
 omit = [
     "*/main.py",
     "*/services/baseline_runner.py",
@@ -73,4 +72,4 @@ omit = [
 ]
 
 [tool.coverage.report]
-fail_under = 85
+fail_under = 90

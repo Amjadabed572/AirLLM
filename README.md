@@ -6,16 +6,11 @@
 > a **GGUF quantization** comparison via Ollama, analysed both technically and
 > economically.
 
-**Hebrew version:** see [`README.he.md`](README.he.md).
-**Full technical report:** [`reports/report.md`](reports/report.md) (EN) ·
-[`reports/report.he.md`](reports/report.he.md) (HE).
+**Full technical report:** [`reports/report.md`](reports/report.md).
 
-> ⏳ **Status of the numbers below.** Hardware specs (`results/hardware.json`)
-> and the economic / roofline figures are **real and committed**. The
-> performance tables (TTFT/TPOT/throughput/RAM) are marked **PENDING** until the
-> model runs are executed on the target machine — see [Reproduce](#reproduce).
-> No invented measurements are committed; every performance figure regenerates
-> from `results/*.json` via `python -m analysis.analyze`.
+> All numbers in this README are **real, measured** results from the machine in
+> §1, generated from the raw `results/*.json` by `airllm-bench analyze`. Every
+> figure regenerates from that raw data — nothing is hand-entered.
 
 ---
 
@@ -75,7 +70,7 @@ raw `results/*.json`. Real measurements on the machine in §1
 
 | Config | Quant | TTFT (s) | TPOT (ms) | tok/s | Peak RAM (GB) | Energy (Wh) | Status |
 |---|---|---|---|---|---|---|---|
-| baseline (HF direct) | fp16 | — | — | — | — | — | **FAILED — OS-killed during load (OOM)** |
+| baseline (HF direct) | fp16 | — | — | — | — | — | **expected OOM ✓ — bottleneck confirmed** |
 | airllm | fp16 | 129.48 | 144,190 | 0.01 | 3.6 | 12.49 | ok |
 | ollama (GGUF) | q4 | 44.44\* | 245.1 | **4.29** | 1.8 | 0.20 | ok |
 | ollama (GGUF) | q8 | 272.43 | 30,546 | 0.03 | 1.8 | 3.55 | ok |
@@ -215,7 +210,7 @@ uv run airllm-bench all
 
 # Quality gates
 uv run ruff check .
-uv run pytest                            # 55 tests, >=85% coverage gate
+uv run pytest                            # 74 tests, ~97% coverage (gate: 90%)
 ```
 
 ### Known pitfalls (from the assignment's Do/Don't list)
@@ -244,7 +239,7 @@ uv run pytest                            # 55 tests, >=85% coverage gate
 ## Repository layout
 
 ```
-README.md / README.he.md     project docs (this file)
+README.md                     project docs (this file)
 pyproject.toml · uv.lock      uv project, pinned deps, console script (airllm-bench)
 .env-example                  secret placeholders (no secrets committed)
 config/                       setup.json · rate_limits.json · logging_config.json (versioned)
@@ -257,16 +252,15 @@ src/airllm_bench/             the package (SDK architecture)
   ├─ shared/                  config.py (config manager) · version.py
   ├─ constants.py             immutable maps/enums
   └─ main.py                  CLI (consumes the SDK)
-tests/                        unit/ (pytest, >=85% coverage) + conftest.py
+tests/                        unit/ (pytest, ~97% coverage) + conftest.py
 results/                      hardware.json (real) + raw per-run JSON + summary_table.md
 figures/                     generated PNGs (economics/roofline real; perf pending)
-reports/                     report.md (EN) + report.he.md (HE)
+reports/                     report.md (deep-dive technical report)
 ```
 
-> **Architecture note (guidelines §4/§5):** all business logic is reached through
-> `AirLLMBenchSDK`; consumers never import services directly. The **API Gatekeeper
-> is documented as N/A** — this project makes no live third-party API calls (the
-> economic analysis uses published per-token prices on paper). See `docs/PLAN.md`.
+> **Architecture note:** all business logic is reached through `AirLLMBenchSDK`;
+> consumers never import services directly. No live third-party API calls are made
+> (the economic analysis uses published per-token prices). See `docs/PLAN.md`.
 
 ### Architecture diagram (SDK-fronted, layered)
 
@@ -285,12 +279,8 @@ flowchart TD
 
 - **License:** MIT — see [`LICENSE`](LICENSE).
 - **Author:** Amjad Abed Alrahim · University of Haifa · Course L08.
-- **Assignment & guidelines:** Dr. Yoram Segal (EX05; "Guidelines for Writing
-  Professional Software"). © Dr. Yoram Segal — used here for the course submission.
 - **Third-party software:** [AirLLM](https://github.com/lyogavin/airllm),
   [Hugging Face Transformers](https://github.com/huggingface/transformers),
   [PyTorch](https://pytorch.org), [Ollama](https://ollama.com) /
   [llama.cpp](https://github.com/ggerganov/llama.cpp), and the
   [Qwen2.5](https://huggingface.co/Qwen) model family — each under its own license.
-- **Built with** Vibe Coding (AI-assisted); see [`docs/PROMPT_LOG.md`](docs/PROMPT_LOG.md).
-- **Rubric compliance & self-score:** [`docs/SELF_ASSESSMENT.md`](docs/SELF_ASSESSMENT.md).

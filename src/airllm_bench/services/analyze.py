@@ -45,8 +45,12 @@ def markdown_table(rows: list[dict]) -> str:
     """Render the comparison table from raw run records."""
     lines = [_TABLE_HEAD, _TABLE_SEP]
     for r in rows:
-        status = "ok" if not r.get("failed") else (
-            f"FAILED — {_short_reason(r.get('failure_reason', ''))}" or "FAILED")
+        if not r.get("failed"):
+            status = "ok"
+        elif r.get("expected_failure"):
+            status = "expected OOM ✓ (bottleneck confirmed)"
+        else:
+            status = f"FAILED — {_short_reason(r.get('failure_reason', ''))}"
         lines.append(
             f"| {r.get('label', '')} | {r.get('prompt', '') or '—'} | "
             f"{r.get('quantization', '')} | "

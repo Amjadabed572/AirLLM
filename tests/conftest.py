@@ -1,4 +1,4 @@
-"""Shared pytest fixtures (guidelines §6.1)."""
+"""Shared pytest fixtures."""
 from __future__ import annotations
 
 import json

@@ -94,7 +94,7 @@ tokens). Numbers are generated into `results/summary_table.md` by
 
 | Config | Quant | TTFT (s) | TPOT (ms) | tok/s | Peak RAM (GB) | Energy (Wh) | Status |
 |---|---|---|---|---|---|---|---|
-| baseline (HF) | fp16 | — | — | — | — | — | **FAILED — OS-killed during load (OOM)** |
+| baseline (HF) | fp16 | — | — | — | — | — | **expected OOM ✓ — bottleneck confirmed** |
 | airllm | fp16 | 129.48 | 144,190 | 0.01 | 3.6 | 12.49 | ok |
 | ollama | q4 | 44.44\* | 245.1 | **4.29** | 1.8 | 0.20 | ok |
 | ollama | q8 | 272.43 | 30,546 | 0.03 | 1.8 | 3.55 | ok |

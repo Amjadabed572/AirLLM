@@ -73,6 +73,18 @@ def test_failed_row_shows_reason(tmp_path: Path) -> None:
     assert "Process killed by OS (OOM)" in table
 
 
+def test_expected_failure_shows_positive_status(tmp_path: Path) -> None:
+    results = tmp_path / "results"
+    results.mkdir()
+    row = {"label": "baseline", "quantization": "fp16", "prompt": "short",
+           "failed": True, "expected_failure": True,
+           "failure_reason": "OOM during load"}
+    (results / "baseline_short.json").write_text(json.dumps(row), encoding="utf-8")
+    table = markdown_table(load_results(str(results)))
+    assert "expected OOM" in table
+    assert "FAILED" not in table
+
+
 def test_analyze_writes_summary(tmp_path: Path, monkeypatch) -> None:
     _write_results(tmp_path / "results")
     monkeypatch.chdir(tmp_path)

@@ -1,4 +1,4 @@
-"""Immutable project constants (guidelines §7.3).
+"""Immutable project constants.
 
 Only true constants live here — physical/mathematical facts and fixed mappings.
 Anything tunable (model id, prices, power, paths) belongs in config/*.json and is

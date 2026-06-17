@@ -8,7 +8,7 @@ inference on the host machine and computes a local-vs-API cost analysis.
 **Containers.** One Python package (`airllm_bench`) + config files + a results/
 figures store. No network services; no live external APIs.
 
-**Components (layered, SDK-fronted — guidelines §4.1):**
+**Components (layered, SDK-fronted):**
 
 ```
 Consumers (CLI: airllm_bench.main  ·  notebooks  ·  future GUI/REST)
@@ -49,19 +49,18 @@ Consumers (CLI: airllm_bench.main  ·  notebooks  ·  future GUI/REST)
 - **ADR-3: Baseline uses `max_memory` + no offload.** Rationale: a bare
   `device_map="auto"` silently disk-offloads on CPU-only torch, masking the
   bottleneck. Forbidding offload yields a fast, deterministic failure.
-- **ADR-4: All tunables in `config/*.json`.** Rationale: guidelines §7.2; keeps the
-  analysis transparent/reproducible.
+- **ADR-4: All tunables in `config/*.json`.** Rationale: keeps the analysis
+  transparent and reproducible; no values hardcoded in source.
 
-## 4. API Gatekeeper — documented as **N/A** (guidelines §5)
+## 4. External API calls — none
 
-The rubric's centralized API Gatekeeper governs *live* third-party API calls
-(rate limiting, queue, retry, logging). **This project makes no live external API
-calls**: the economic analysis multiplies *published* per-token prices on paper (a
-deliberate $0 design). A runtime gatekeeper would have nothing to guard.
-`config/rate_limits.json` is retained for completeness and would configure a
-gatekeeper if a live provider were ever wired in.
+**This project makes no live external API calls.** The economic analysis
+multiplies *published* per-token prices on paper (a deliberate zero-spend design),
+so there is no runtime API client and no rate-limiting layer to maintain.
+`config/rate_limits.json` is a placeholder that would configure such a layer only
+if a live provider were ever wired in.
 
-## 5. Concurrency (guidelines §15)
+## 5. Concurrency
 
 - `MemorySampler` uses a background **thread** (I/O-bound polling of RSS) — correct
   choice over multiprocessing for a sampler that mostly sleeps.

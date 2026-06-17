@@ -1,8 +1,8 @@
-"""Configuration manager (guidelines §7.2, §7.3).
+"""Configuration manager.
 
 All tunable values are read from config/*.json through this manager — never
 hardcoded in source. Secrets are read only from environment variables, never
-from these files (guidelines §7.4).
+from these files.
 """
 from __future__ import annotations
 

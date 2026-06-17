@@ -1,4 +1,4 @@
-"""Single source of truth for the package version (guidelines §8.1).
+"""Single source of truth for the package version.
 
 Code, config files, and rate-limit config all start at 1.00 and rise only on
 meaningful change. The app validates config-version compatibility at startup
