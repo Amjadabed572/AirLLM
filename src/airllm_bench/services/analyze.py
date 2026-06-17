@@ -13,10 +13,10 @@ from airllm_bench.services import plots
 from airllm_bench.services.economics import Scenario, summarize
 
 _TABLE_HEAD = (
-    "| Config | Prompt | Quant | TTFT (s) | TPOT (ms) | tok/s | "
+    "| Config | Prompt | Quant | TTFT (s) | TPOT (ms) | tok/s | Total (s) | "
     "Peak RAM (GB) | Peak VRAM (GB) | Energy (Wh) | Status |"
 )
-_TABLE_SEP = "|" + "---|" * 10
+_TABLE_SEP = "|" + "---|" * 11
 
 
 def load_results(results_dir: str = "results") -> list[dict]:
@@ -55,7 +55,8 @@ def markdown_table(rows: list[dict]) -> str:
             f"| {r.get('label', '')} | {r.get('prompt', '') or '—'} | "
             f"{r.get('quantization', '')} | "
             f"{r.get('ttft_s', 0):.2f} | {r.get('tpot_s', 0) * 1000:.1f} | "
-            f"{r.get('throughput_tok_s', 0):.2f} | {r.get('peak_ram_gb', 0):.1f} | "
+            f"{r.get('throughput_tok_s', 0):.2f} | {r.get('total_gen_s', 0):.1f} | "
+            f"{r.get('peak_ram_gb', 0):.1f} | "
             f"{r.get('peak_vram_gb', 0):.1f} | {r.get('est_energy_wh', 0):.2f} | {status} |"
         )
     return "\n".join(lines)

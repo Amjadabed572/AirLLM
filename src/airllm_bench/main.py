@@ -16,6 +16,17 @@ from airllm_bench.sdk.sdk import AirLLMBenchSDK
 from airllm_bench.shared.config import Config
 
 
+def _force_utf8_stdout() -> None:
+    """Tables contain unicode (✓, —); make stdout UTF-8 so the CLI doesn't crash
+    on a non-UTF-8 console (e.g. a Hebrew-locale cmd using cp1255)."""
+    import contextlib
+    import sys
+
+    for stream in (sys.stdout, sys.stderr):
+        with contextlib.suppress(AttributeError, ValueError):
+            stream.reconfigure(encoding="utf-8", errors="replace")
+
+
 def _status(metrics) -> str:
     if metrics.failed:
         return f"FAILED: {metrics.failure_reason}"
@@ -50,6 +61,7 @@ def _run_study(sdk: AirLLMBenchSDK) -> None:
 
 def main(argv: list[str] | None = None) -> int:
     """Parse the sub-command and dispatch to the SDK."""
+    _force_utf8_stdout()
     parser = argparse.ArgumentParser(prog="airllm-bench", description=__doc__)
     parser.add_argument(
         "command",

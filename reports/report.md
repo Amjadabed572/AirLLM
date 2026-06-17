@@ -92,12 +92,12 @@ Measured on the §1 machine (Qwen2.5-7B-Instruct, "short" prompt, 20 output
 tokens). Numbers are generated into `results/summary_table.md` by
 `airllm-bench analyze` — not hand-edited.
 
-| Config | Quant | TTFT (s) | TPOT (ms) | tok/s | Peak RAM (GB) | Energy (Wh) | Status |
-|---|---|---|---|---|---|---|---|
-| baseline (HF) | fp16 | — | — | — | — | — | **expected OOM ✓ — bottleneck confirmed** |
-| airllm | fp16 | 122.61 | 128,494 | 0.01 | 3.6 | 11.19 | ok |
-| ollama | q4 | 39.51\* | 255.4 | **4.12** | 0.1† | 0.18 | ok |
-| ollama | q8 | 228.70 | 30,161 | 0.03 | 0.4† | 3.34 | ok |
+| Config | Quant | TTFT (s) | TPOT (ms) | tok/s | Total (s) | Peak RAM (GB) | Energy (Wh) | Status |
+|---|---|---|---|---|---|---|---|---|
+| baseline (HF) | fp16 | — | — | — | — | — | — | **expected OOM ✓ — bottleneck confirmed** |
+| airllm | fp16 | 122.61 | 128,494 | 0.01 | 2564 | 3.6 | 11.19 | ok |
+| ollama | q4 | 39.51\* | 255.4 | **4.12** | 44.4 | 0.1† | 0.18 | ok |
+| ollama | q8 | 228.70 | 30,161 | 0.03 | 801.8 | 0.4† | 3.34 | ok |
 
 \* Q4 TTFT includes the one-time model load (~37 s); warm prefill ≈ 4 s (see §3.1).
 † Ollama peak RAM is a whole-system delta from another process (server already
@@ -112,11 +112,11 @@ resident → near-zero); the real footprints are ~4.4 GB (Q4) / ~8 GB (Q8) by de
 Ollama Q4 across three prompt lengths (`airllm-bench study`). The first call also
 pays a one-time model load; reading the **warm** runs isolates prefill:
 
-| Prompt | Input tokens | TTFT (s) | TPOT (ms) | tok/s |
-|---|---|---|---|---|
-| short | ~12 | 39.51 (cold-start load) | 255.4 | 4.12 |
-| medium (warm) | ~40 | 4.30 | 285.6 | 3.52 |
-| long_context (warm) | ~620 | 63.48 | 362.8 | 2.78 |
+| Prompt | Input tokens | TTFT (s) | TPOT (ms) | tok/s | Total (s) |
+|---|---|---|---|---|---|
+| short | ~12 | 39.51 (cold-start load) | 255.4 | 4.12 | 44.4 |
+| medium (warm) | ~40 | 4.30 | 285.6 | 3.52 | 49.7 |
+| long_context (warm) | ~620 | 63.48 | 362.8 | 2.78 | 103.0 |
 
 Prefill (TTFT) rises sharply with input length (4.3 s → 63 s for ~40 → ~620
 tokens) because it is a compute over *all* prompt tokens, while TPOT stays in a
