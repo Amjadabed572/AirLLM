@@ -65,9 +65,10 @@ source = ["airllm_bench"]
 # via mocks/integration only and excluded from the unit-coverage gate.
 omit = [
     "*/main.py",
+    # These two genuinely require torch / transformers / airllm and a model on
+    # disk; they are exercised via the SDK with mocks rather than unit-covered.
     "*/services/baseline_runner.py",
     "*/services/airllm_runner.py",
-    "*/services/ollama_runner.py",
     "*/services/plots.py",
 ]
 

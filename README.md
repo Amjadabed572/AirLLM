@@ -50,14 +50,21 @@ reproduces this reasoning from the detected RAM + free disk.
    (`transformers.AutoModelForCausalLM`, full FP16 weights). On 7.9 GB RAM this
    OOMs / thrashes swap. **That failure is the bottleneck evidence**, captured
    verbatim in `results/baseline_*.json`.
-2. **AirLLM (Task 5.3)** — the same prompt through AirLLM, which streams **one
-   transformer layer at a time** from the SSD. This is the FP16 layer-streaming
-   demonstration that makes the otherwise-impossible model run.
-3. **Quantization comparison (Task 5.3)** — **Q4 vs Q8 GGUF via Ollama**
-   (llama.cpp, CPU). *Why not AirLLM's own q4/q8?* That path needs `bitsandbytes`
-   with a CUDA GPU of compute capability ≥ 7.5 and several GB VRAM; the GTX 950M
-   (Maxwell 5.0, 2 GB) cannot run it — a documented hardware limitation. GGUF on
-   CPU gives the real quantization numbers instead.
+2. **AirLLM (Task 5.3, fit-the-model axis)** — the same prompt through AirLLM,
+   which streams **one transformer layer at a time** from the SSD. This is the
+   layer-streaming demonstration that makes the otherwise-impossible model run;
+   AirLLM is run at **FP16** (see the note below on why its own Q4/Q8 path is not
+   used on this GPU).
+3. **Quantization (Task 5.3, shrink-the-model axis)** — **FP16 vs Q8 vs Q4** is
+   measured with **GGUF via Ollama** (llama.cpp, CPU), the engine that can
+   actually quantize on this hardware. Task 5.3 asks for *both* AirLLM *and* a
+   quantization sweep; we deliberately assign each to the engine that can run it
+   here — AirLLM for layer-streaming (FP16), GGUF for the quant sweep — because
+   **AirLLM's own Q4/Q8 needs `bitsandbytes` (CUDA ≥ 7.5, several GB VRAM), which
+   the GTX 950M (Maxwell 5.0, 2 GB) cannot provide.** This split is a design
+   decision forced by the hardware, documented in `docs/PRD_quantization.md`, not
+   an omission — together the two engines cover the full FP16→Q8→Q4 sweep the task
+   requires.
 4. **Measure (Task 5.4)** — TTFT, ITL/TPOT, throughput, peak RAM/VRAM, energy.
 5. **Economics (Task 5.5)** — On-Prem CAPEX/OPEX vs third-party API, with
    optional cloud-GPU and prompt-caching scenarios; compute the break-even volume.
@@ -171,12 +178,13 @@ all assumptions editable and stated:
   Wh/request) + maintenance.
 - **Optional cloud GPU:** hourly rate × seconds/request.
 
-With the committed default assumptions the computed break-even is
-**≈ 230k requests** over the amortization period: below that the API wins on pure
-cost; above it On-Prem wins — *before* accounting for privacy, data security, and
-offline availability, which can favour On-Prem regardless of volume. **Edit the
-prices/tariff/lifetime in `config/setup.json` (the `economics` section) to your
-cited values; the energy/request must come from your measured runs.**
+The on-prem energy term is **driven by the measured run** — 0.21 Wh/request from
+the warm Q4 run (the config the analysis assumes you'd actually serve), not a
+guessed figure. With the stated price/tariff/lifetime assumptions the computed
+break-even is **≈ 157k requests** over the amortization period: below that the API
+wins on pure cost; above it On-Prem wins — *before* accounting for privacy, data
+security, and offline availability, which can favour On-Prem regardless of volume.
+All inputs live in `config/setup.json` (the `economics` section) and are editable.
 
 ---
 
@@ -269,7 +277,7 @@ src/airllm_bench/             the package (SDK architecture)
   └─ main.py                  CLI (consumes the SDK)
 tests/                        unit/ (pytest, ~97% coverage) + conftest.py
 results/                      hardware.json (real) + raw per-run JSON + summary_table.md
-figures/                     generated PNGs (economics/roofline real; perf pending)
+figures/                     generated PNGs (all from results/ via analyze)
 reports/                     report.md (deep-dive technical report)
 ```
 

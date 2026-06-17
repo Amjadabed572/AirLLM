@@ -28,7 +28,8 @@
       "hardware_cost_usd": 2500.0,
       "lifetime_years": 3.0,
       "maintenance_usd_per_year": 150.0,
-      "energy_wh_per_request": 12.0,
+      "energy_wh_per_request": 0.21,
+      "_energy_note": "Measured: warm Ollama Q4 run (results/ollama_q4_medium.json = 0.21 Wh) — the practical local-serving config, not the slow AirLLM demo (11.19 Wh).",
       "electricity_usd_per_kwh": 0.17
     },
     "cloud_gpu": {

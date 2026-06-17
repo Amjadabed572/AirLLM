@@ -20,14 +20,29 @@ from airllm_bench.services.metrics import RunMetrics
 from airllm_bench.services.prompts import Prompt
 
 
-def _sample_system_ram(stop: threading.Event, peak: list[float]) -> None:
-    """Sample whole-system used-RAM delta (Ollama runs in a separate process)."""
+def _ollama_rss_gb() -> float:
+    """Resident memory of the Ollama process tree (server + llama runner), in GB.
+
+    Ollama runs the model in a separate process, so we sum the RSS of every
+    process whose name contains 'ollama' or 'llama' rather than a whole-system
+    delta (which is unreliable once the server is already resident)."""
     import psutil
 
-    base = psutil.virtual_memory().used / (1024**3)
+    total = 0
+    for proc in psutil.process_iter(["name", "memory_info"]):
+        try:
+            name = (proc.info["name"] or "").lower()
+            if "ollama" in name or "llama" in name:
+                total += proc.info["memory_info"].rss
+        except (psutil.NoSuchProcess, psutil.AccessDenied):
+            continue
+    return total / (1024**3)
+
+
+def _sample_ollama_ram(stop: threading.Event, peak: list[float]) -> None:
+    """Track the peak RSS of the Ollama process tree during a run."""
     while not stop.is_set():
-        used = psutil.virtual_memory().used / (1024**3)
-        peak[0] = max(peak[0], used - base)
+        peak[0] = max(peak[0], _ollama_rss_gb())
         time.sleep(0.1)
 
 
@@ -50,7 +65,7 @@ def run_ollama(quant: str, prompt: Prompt, avg_power_w: float = 15.0) -> RunMetr
 
         stop = threading.Event()
         peak = [0.0]
-        sampler = threading.Thread(target=_sample_system_ram, args=(stop, peak), daemon=True)
+        sampler = threading.Thread(target=_sample_ollama_ram, args=(stop, peak), daemon=True)
         sampler.start()
 
         wall0 = time.perf_counter()

@@ -82,11 +82,17 @@ class Scenario:
 
     @classmethod
     def from_config(cls, economics: dict[str, Any]) -> Scenario:
-        """Build a Scenario from the config/setup.json `economics` section."""
+        """Build a Scenario from the config/setup.json `economics` section.
+
+        Keys beginning with '_' are treated as JSON comments and ignored."""
+        def fields(name: str) -> dict[str, Any]:
+            return {k: v for k, v in economics.get(name, {}).items()
+                    if not k.startswith("_")}
+
         return cls(
-            api=APIParams(**economics.get("api", {})),
-            onprem=OnPremParams(**economics.get("onprem", {})),
-            cloud=CloudGPUParams(**economics.get("cloud_gpu", {})),
+            api=APIParams(**fields("api")),
+            onprem=OnPremParams(**fields("onprem")),
+            cloud=CloudGPUParams(**fields("cloud_gpu")),
             period_years=float(economics.get("period_years", 1.0)),
         )
 

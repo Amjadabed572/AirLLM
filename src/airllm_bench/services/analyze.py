@@ -9,6 +9,11 @@ import glob
 import json
 import os
 
+from airllm_bench.constants import (
+    ROOFLINE_INTENSITY,
+    ROOFLINE_PEAK_BW_GBPS,
+    ROOFLINE_PEAK_GFLOPS,
+)
 from airllm_bench.services import plots
 from airllm_bench.services.economics import Scenario, summarize
 
@@ -84,8 +89,8 @@ def make_figures(rows: list[dict], scenario: Scenario) -> list[str]:
     be = scenario.break_even()
     max_vol = int((be or 100_000) * 2.5)
     paths.append(plots.break_even(scenario, max_vol, "break_even.png"))
-    paths.append(plots.roofline({"prefill": 50.0, "decode": 0.3},
-                                peak_flops=2000.0, peak_bw=50.0, fname="roofline.png"))
+    paths.append(plots.roofline(ROOFLINE_INTENSITY, peak_flops=ROOFLINE_PEAK_GFLOPS,
+                                peak_bw=ROOFLINE_PEAK_BW_GBPS, fname="roofline.png"))
     return paths
 
 

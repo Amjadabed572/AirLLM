@@ -31,7 +31,8 @@ per-request price is already below on-prem's variable cost).
 
 ## Success criteria & edge cases
 
-- A finite, sensible break-even with the committed defaults (~230k requests).
+- A finite, sensible break-even with the stated assumptions (~157k requests,
+  using the measured 0.21 Wh/request from the warm Q4 run).
 - Caching fraction = 1.0 lowers API cost; in/out tokens = 0 → break-even None.
 - Recommendation states *when* each option wins, including non-cost factors
   (privacy, data security, offline) that can favour On-Prem regardless of volume.

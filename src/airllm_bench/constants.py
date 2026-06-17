@@ -17,6 +17,13 @@ NS_PER_SECOND: float = 1e9
 # SATA-SSD sequential read ceiling (GB/s), for the roofline disk-tier note.
 SATA_SSD_READ_GBPS: float = 0.5
 
+# Roofline reference values — ILLUSTRATIVE (not measured on this CPU); the
+# roofline is an aspirational visualization of where prefill vs decode are
+# limited, so these set the shape of the curve, not a benchmarked ceiling.
+ROOFLINE_PEAK_GFLOPS: float = 2000.0
+ROOFLINE_PEAK_BW_GBPS: float = 50.0
+ROOFLINE_INTENSITY: dict[str, float] = {"prefill": 50.0, "decode": 0.3}
+
 
 class Quant(str, Enum):
     """Quantization levels compared across engines."""
