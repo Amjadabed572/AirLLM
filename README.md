@@ -306,6 +306,31 @@ flowchart TD
 ```
 
 ---
+## Development Token Budget (Vibe Coding)
+
+This project was built using the Vibe Coding methodology — orchestrating an AI
+coding agent (Claude) rather than hand-writing every line. In the cost-aware
+spirit of Task 5.5, the table below accounts for the **token cost of producing
+the homework itself**, which is separate from the inference-cost analysis in §5
+(that one is about *running* the model). The build was done in the Claude app
+under a flat-rate subscription, so no per-token charge was actually incurred;
+the dollar column is the **equivalent API cost** at Claude Opus 4.8 published
+rates ($5 / $25 per million input / output tokens), to make the cost concrete.
+
+| Phase | ~Input tokens | ~Output tokens | Est. cost (USD) |
+| --- | --- | --- | --- |
+| Setup, environment & model selection | 45k | 15k | $0.60 |
+| Experiment code & runners (baseline / AirLLM / Ollama) | 130k | 70k | $2.40 |
+| Data processing, plots & economic analysis | 75k | 35k | $1.25 |
+| Report & README writing | 65k | 45k | $1.45 |
+| **Total** | **~315k** | **~165k** | **~$5.70** |
+
+> Figures are estimates — the Claude app does not expose exact per-session token
+> counts. The takeaway is the order of magnitude: building this entire
+> instrumented benchmark via Vibe Coding cost roughly **$5–6 of equivalent API
+> tokens**, against the hands-on estimate of **6.5–11 hours** in the assignment's
+> time appendix. The development cost is dwarfed by the engineering time it
+> replaces — which is the economic case for the Vibe Coding workflow itself.
 
 ## License & Credits
 
