@@ -316,8 +316,8 @@ about *running* the model). The build ran under a flat-rate Claude subscription,
 so **no per-token charge was actually incurred**; the cost column is the
 **equivalent API cost** at published rates, to make it concrete.
 
-Token counts are the **real measured usage** for this Claude Code session
-(`/cost` / `/status`), not estimates. Rates: Opus 4.8 $5 / $25 per 1M input /
+Token counts are the **real measured usage** for this Claude Code session, taken
+from its built-in usage display — not estimates. Rates: Opus 4.8 $5 / $25 per 1M input /
 output, with cache **writes at 1.25× ($6.25)** and cache **reads at 0.1× ($0.50)**;
 Sonnet 4.6 $3 / $15 (cache $3.75 / $0.30).
 
