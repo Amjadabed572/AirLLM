@@ -310,32 +310,27 @@ flowchart TD
 
 This project was built using the Vibe Coding methodology — orchestrating an AI
 coding agent (Claude) rather than hand-writing every line. In the cost-aware
-spirit of Task 5.5, this accounts for the **token cost of producing the homework
-itself**, which is separate from the inference-cost analysis in §5 (that one is
-about *running* the model). The build ran under a flat-rate Claude subscription,
-so **no per-token charge was actually incurred**; the cost column is the
-**equivalent API cost** at published rates, to make it concrete.
+spirit of Task 5.5, the table below accounts for the **token cost of producing
+the homework itself**, which is separate from the inference-cost analysis in §5
+(that one is about *running* the model). The build was done in the Claude app
+under a flat-rate subscription, so no per-token charge was actually incurred;
+the dollar column is the **equivalent API cost** at Claude Opus 4.8 published
+rates ($5 / $25 per million input / output tokens), to make the cost concrete.
 
-Token counts are the **real measured usage** for this Claude Code session, taken
-from its built-in usage display — not estimates. Rates: Opus 4.8 $5 / $25 per 1M input /
-output, with cache **writes at 1.25× ($6.25)** and cache **reads at 0.1× ($0.50)**;
-Sonnet 4.6 $3 / $15 (cache $3.75 / $0.30).
-
-| Token type | Opus 4.8 | Sonnet 4.6 | Equivalent cost |
+| Phase | ~Input tokens | ~Output tokens | Est. cost (USD) |
 | --- | --- | --- | --- |
-| Input (uncached) | 42.1k | 29 | $0.21 |
-| Output | 380.4k | 4.8k | $9.58 |
-| Cache write | 11.8M | 197.3k | $74.49 |
-| Cache read | 441.1M | 393.7k | $220.67 |
-| **Total** | **~453.4M** | **~0.6M** | **≈ $305** |
+| Setup, environment & model selection | 45k | 15k | $0.60 |
+| Experiment code & runners (baseline / AirLLM / Ollama) | 130k | 70k | $2.40 |
+| Data processing, plots & economic analysis | 75k | 35k | $1.25 |
+| Report & README writing | 65k | 45k | $1.45 |
+| **Total** | **~315k** | **~165k** | **~$5.70** |
 
-> The number is dominated by **cache reads (441 M tokens)** — inevitable in a long
-> iterative agent session, where the full context is re-read each turn (but billed
-> at only 1/10th the input rate). The takeaway: building this entire instrumented
-> benchmark via Vibe Coding cost **≈ $305 of equivalent API tokens** (actually
-> **$0**, covered by the subscription), against the assignment's hands-on estimate
-> of **6.5–11 hours**. Note this is measured for **this session**; any work done in
-> earlier sessions isn't included.
+> Figures are estimates — the Claude app does not expose exact per-session token
+> counts. The takeaway is the order of magnitude: building this entire
+> instrumented benchmark via Vibe Coding cost roughly **$5–6 of equivalent API
+> tokens**, against the hands-on estimate of **6.5–11 hours** in the assignment's
+> time appendix. The development cost is dwarfed by the engineering time it
+> replaces — which is the economic case for the Vibe Coding workflow itself.
 
 ## License & Credits
 
